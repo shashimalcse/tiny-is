@@ -98,20 +98,19 @@ func (handler OAuth2Handler) Authorize(w http.ResponseWriter, r *http.Request) {
 		query.Set("state", state)
 	}
 	redirectURL.RawQuery = query.Encode()
-	htmlResponse := fmt.Sprintf(`
-		<html>
-		<head>
-			<meta http-equiv="refresh" content="0;url=%s" />
-		</head>
-		<body>
-			If you are not redirected, <a href="%s">click here</a>.
-		</body>
-		</html>
-	`, redirectURL.String(), redirectURL.String())
-
 	w.Header().Set("Content-Type", "text/html")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(htmlResponse))
+	fmt.Fprintf(w, `
+        <!DOCTYPE html>
+        <html>
+        <head>
+        </head>
+        <body>
+            <script>
+                window.location.replace("%s");
+            </script>
+        </body>
+        </html>
+    `, redirectURL.String())
 }
 
 func (handler OAuth2Handler) Token(w http.ResponseWriter, r *http.Request) {

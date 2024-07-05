@@ -19,7 +19,7 @@ func NewUserService(cacheService *cache.CacheService, db *sqlx.DB) *UserService 
 
 func (u UserService) GetUserIdByUsername(username string) (string, error) {
 	var userId string
-	err := u.db.Get(&userId, "SELECT id FROM users WHERE username=$1", username)
+	err := u.db.Get(&userId, "SELECT id FROM org_user WHERE username=$1", username)
 	if err != nil {
 		return "", err
 	}
@@ -27,7 +27,7 @@ func (u UserService) GetUserIdByUsername(username string) (string, error) {
 }
 
 func (u UserService) CreateUser(username, password string) error {
-	_, err := u.db.Exec("INSERT INTO users (username, password) VALUES ($1, $2)", username, password)
+	_, err := u.db.Exec("INSERT INTO org_user (username, password) VALUES ($1, $2)", username, password)
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func (u UserService) CreateUser(username, password string) error {
 
 func (u UserService) GetHashedPasswordByUsername(username string) (string, error) {
 	var password string
-	err := u.db.Get(&password, "SELECT password FROM users WHERE username=$1", username)
+	err := u.db.Get(&password, "SELECT password FROM org_user WHERE username=$1", username)
 	if err != nil {
 		return "", err
 	}
