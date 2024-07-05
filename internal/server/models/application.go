@@ -4,7 +4,7 @@ import (
 	"github.com/shashimalcse/tiny-is/internal/application/models"
 )
 
-type Application struct {
+type ApplicationResponse struct {
 	Id           string   `json:"id"`
 	ClientId     string   `json:"client_id,omitempty"`
 	ClientSecret string   `json:"client_secret,omitempty"`
@@ -17,8 +17,8 @@ type ApplicationCreateRequest struct {
 	GrantTypes  []string `json:"grant_types,omitempty"`
 }
 
-func GetApplicationResponse(application models.Application) Application {
-	return Application{
+func GetApplicationResponse(application models.Application) ApplicationResponse {
+	return ApplicationResponse{
 		Id:           application.Id,
 		ClientId:     application.ClientId,
 		ClientSecret: application.ClientSecret,
@@ -27,12 +27,12 @@ func GetApplicationResponse(application models.Application) Application {
 	}
 }
 
-func GetApplicationResponses(applications []models.Application) []Application {
+func GetApplicationResponses(applications []models.Application) []ApplicationResponse {
 
 	if applications == nil {
-		return []Application{}
+		return []ApplicationResponse{}
 	}
-	var applicationResponses []Application
+	var applicationResponses []ApplicationResponse
 	for _, application := range applications {
 		applicationResponses = append(applicationResponses, GetApplicationResponse(application))
 	}

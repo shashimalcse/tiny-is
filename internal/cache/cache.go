@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"time"
+
 	"github.com/patrickmn/go-cache"
 	"github.com/shashimalcse/tiny-is/internal/server/models"
 )
@@ -9,7 +11,8 @@ type CacheService struct {
 	c *cache.Cache
 }
 
-func NewCacheService(c *cache.Cache) *CacheService {
+func NewCacheService() *CacheService {
+	c := cache.New(5*time.Minute, 10*time.Minute)
 	return &CacheService{
 		c: c,
 	}

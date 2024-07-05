@@ -3,21 +3,20 @@ package server
 import (
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"github.com/patrickmn/go-cache"
 	"github.com/shashimalcse/tiny-is/internal/application"
 	cs "github.com/shashimalcse/tiny-is/internal/cache"
 	"github.com/shashimalcse/tiny-is/internal/server/routes"
+	"github.com/shashimalcse/tiny-is/internal/session"
 	"github.com/shashimalcse/tiny-is/internal/user"
 )
 
 func StartServer() {
-	c := cache.New(5*time.Minute, 10*time.Minute)
 
-	cacheService := cs.NewCacheService(c)
+	cacheService := cs.NewCacheService()
+	sessionStore := session.NewSessionStore()
 
 	db, err := sqlx.Connect("postgres", "user=postgres dbname=tinydb sslmode=disable password=tinydb host=localhost")
 	if err != nil {
@@ -34,7 +33,7 @@ func StartServer() {
 
 	applicationService := application.NewApplicationService(cacheService, db)
 	userService := user.NewUserService(cacheService, db)
-	router := routes.NewRouter(cacheService, applicationService, userService)
+	router := routes.NewRouter(cacheService, sessionStore, applicationService, userService)
 	loggedRouter := LoggingMiddleware(router)
 	if err := http.ListenAndServe(":9444", loggedRouter); err != nil {
 		panic(err)

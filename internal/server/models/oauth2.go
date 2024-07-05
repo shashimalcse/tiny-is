@@ -1,5 +1,7 @@
 package models
 
+import "github.com/shashimalcse/tiny-is/internal/authn/models"
+
 type OAuth2AuthorizeRequest struct {
 	ResponseType   string
 	ClientId       string
@@ -17,8 +19,8 @@ type TokenResponse struct {
 }
 
 type OAuth2AuthorizeContext struct {
-	OAuth2AuthorizeRequest OAuth2AuthorizeRequest `json:"oauth2_authorize_request"`
-	AuthenticatedUser      AuthenticatedUser      `json:"authenticated_user"`
+	OAuth2AuthorizeRequest OAuth2AuthorizeRequest   `json:"oauth2_authorize_request"`
+	AuthenticatedUser      models.AuthenticatedUser `json:"authenticated_user"`
 }
 
 type OAuth2TokenRequest struct {
