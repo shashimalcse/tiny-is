@@ -193,4 +193,3 @@ func (handler OAuth2Handler) isValidateClientSecret(clientId, clientSecret strin
 func (handler OAuth2Handler) isValidateRedirectURI(clientId, redirectURI string) (bool, error) {
 	return handler.oauth2.ApplicationService.ValidateRedirectUri(clientId, redirectURI)
 }
-

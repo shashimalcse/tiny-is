@@ -21,5 +21,6 @@ func NewOAuth2(cacheService *cache.CacheService, applicationService *application
 	}
 	oauth2.ApplicationService = applicationService
 	oauth2.GrantTypes["authorization_code"] = oauth2.AuthorizationCodeGrant
+	oauth2.GrantTypes["refresh_token"] = oauth2.RefreshTokenGrant
 	return oauth2
 }
