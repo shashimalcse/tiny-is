@@ -60,9 +60,8 @@ func (handler AuthnHandler) Login(w http.ResponseWriter, r *http.Request) {
 			Value:    sessionID,
 			Expires:  time.Now().Add(sessionDuration),
 			HttpOnly: true,
-			Path:     "/", // Ensure the cookie is available for all paths
-			// Secure:   true,  // Uncomment this line when using HTTPS
-			SameSite: http.SameSiteLaxMode, // Less restrictive than Strict, might help in some cases
+			Path:     "/",
+			SameSite: http.SameSiteLaxMode,
 		}
 		http.SetCookie(w, cookie)
 		oauth2AuthorizeContext.AuthenticatedUser = authroizedUser

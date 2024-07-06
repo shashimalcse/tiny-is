@@ -17,5 +17,6 @@ func NewRouter(cacheService *cache.CacheService, sessionStore *session.SessionSt
 	RegisterOAuth2Routes(mux, oauth2.NewOAuth2(cacheService, applicationService))
 	RegisterAuthnRoutes(mux, authn.NewAuthn(cacheService, sessionStore, userService))
 	RegisterApplicationRoutes(mux, applicationService)
+	RegisterUserRoutes(mux, userService)
 	return mux
 }

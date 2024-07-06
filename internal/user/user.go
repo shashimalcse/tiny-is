@@ -3,6 +3,7 @@ package user
 import (
 	"github.com/jmoiron/sqlx"
 	"github.com/shashimalcse/tiny-is/internal/cache"
+	"github.com/shashimalcse/tiny-is/internal/user/models"
 )
 
 type UserService struct {
@@ -26,8 +27,26 @@ func (u UserService) GetUserIdByUsername(username string) (string, error) {
 	return userId, nil
 }
 
-func (u UserService) CreateUser(username, password string) error {
-	_, err := u.db.Exec("INSERT INTO org_user (username, password) VALUES ($1, $2)", username, password)
+func (u UserService) GetUserById(userId string) (models.User, error) {
+	var user models.User
+	err := u.db.Get(&user, "SELECT id, username FROM org_user WHERE id=$1", userId)
+	if err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}
+
+func (u UserService) GetUsers() ([]models.User, error) {
+	var users []models.User
+	err := u.db.Select(&users, "SELECT id, username FROM org_user")
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (u UserService) CreateUser(user models.User) error {
+	_, err := u.db.Exec("INSERT INTO org_user (id, username, password) VALUES ($1, $2, $3)", user.Id, user.Username, user.Password)
 	if err != nil {
 		return err
 	}

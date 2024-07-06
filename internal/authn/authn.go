@@ -42,11 +42,3 @@ func (authn Authn) ValidateUser(username, password string) (bool, error) {
 func (authn Authn) GetUserIdByUsername(username string) (string, error) {
 	return authn.userService.GetUserIdByUsername(username)
 }
-
-// func hashPassword(password string) (string, error) {
-// 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	return string(bytes), nil
-// }
