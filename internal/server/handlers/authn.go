@@ -82,6 +82,11 @@ func (handler AuthnHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (handler AuthnHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
 
+	orgName := r.Header.Get("org_name")
+	if orgName == "" {
+		http.Error(w, "Organization not found!", http.StatusNotFound)
+		return
+	}
 	sessionDataKey := r.URL.Query().Get("session_data_key")
 	if sessionDataKey == "" {
 		http.Error(w, "session_data_key is required", http.StatusBadRequest)
@@ -114,5 +119,5 @@ func (handler AuthnHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "session_data_key is required", http.StatusBadRequest)
 		return
 	}
-	handler.authn.GetLoginPage(sessionDataKey).Render(r.Context(), w)
+	handler.authn.GetLoginPage(sessionDataKey, orgName).Render(r.Context(), w)
 }

@@ -1,9 +1,9 @@
 package screens
 
-templ LoginForm(SessionDataKey string) {
+templ LoginForm(SessionDataKey string, OrganizationName string) {
   <div class="w-full max-w-md bg-white rounded-lg shadow-md p-8">
     <h2 class="text-2xl font-bold text-center text-gray-800">Login</h2>
-    <form class="mt-8 space-y-6" hx-post="/login" hx-include="[name=session_data_key]" hx-trigger="submit" hx-target="this">
+    <form class="mt-8 space-y-6"  hx-post={"/o/" + OrganizationName + "/login"}hx-include="[name=session_data_key]" hx-trigger="submit" hx-target="this">
 	  <input type="hidden" name="session_data_key" value={SessionDataKey}>
       <div>
         <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
@@ -20,7 +20,7 @@ templ LoginForm(SessionDataKey string) {
   </div>
 }
 
-templ LoginPage(SessionDataKey string) {
+templ LoginPage(SessionDataKey string, OrganizationName string) {
 	<html>
 		<head>
 			<title>Login</title>
@@ -28,7 +28,7 @@ templ LoginPage(SessionDataKey string) {
 			 <script src="https://unpkg.com/htmx.org@2.0.0"></script>
 		</head>
 		<body class="flex items-center justify-center w-screen h-screen bg-gray-100">
-			@LoginForm(SessionDataKey)
+			@LoginForm(SessionDataKey, OrganizationName)
 		</body>
 	</html>
 }

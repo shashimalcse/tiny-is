@@ -6,24 +6,27 @@ import (
 
 type ApplicationResponse struct {
 	Id           string   `json:"id"`
+	Name         string   `json:"name"`
 	ClientId     string   `json:"client_id,omitempty"`
 	ClientSecret string   `json:"client_secret,omitempty"`
-	RedirectUri  string   `json:"redirect_uri,omitempty"`
+	RedirectUris []string `json:"redirect_uris,omitempty"`
 	GrantTypes   []string `json:"grant_types,omitempty"`
 }
 
 type ApplicationCreateRequest struct {
-	RedirectUri string   `json:"redirect_uri,omitempty"`
-	GrantTypes  []string `json:"grant_types,omitempty"`
+	Name         string   `json:"name"`
+	RedirectUris []string `json:"redirect_uris,omitempty"`
+	GrantTypes   []string `json:"grant_types,omitempty"`
 }
 
 func GetApplicationResponse(application models.Application) ApplicationResponse {
 	return ApplicationResponse{
 		Id:           application.Id,
+		Name:         application.Name,
 		ClientId:     application.ClientId,
 		ClientSecret: application.ClientSecret,
-		RedirectUri:  application.RedirectUri,
-		GrantTypes:   application.GetGrantTypes(),
+		RedirectUris: application.RedirectUris,
+		GrantTypes:   application.GrantTypes,
 	}
 }
 

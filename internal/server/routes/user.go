@@ -4,10 +4,11 @@ import (
 	"net/http"
 
 	"github.com/shashimalcse/tiny-is/internal/server/handlers"
+	"github.com/shashimalcse/tiny-is/internal/server/utils"
 	"github.com/shashimalcse/tiny-is/internal/user"
 )
 
-func RegisterUserRoutes(mux *http.ServeMux, userService *user.UserService) {
+func RegisterUserRoutes(mux *utils.OrgServeMux, userService *user.UserService) {
 	handler := handlers.NewUserHandler(userService)
 
 	mux.HandleFunc("POST /users", func(w http.ResponseWriter, r *http.Request) {

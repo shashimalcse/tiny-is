@@ -46,7 +46,7 @@ func (u UserService) GetUsers() ([]models.User, error) {
 }
 
 func (u UserService) CreateUser(user models.User) error {
-	_, err := u.db.Exec("INSERT INTO org_user (id, username, password) VALUES ($1, $2, $3)", user.Id, user.Username, user.Password)
+	_, err := u.db.Exec("INSERT INTO org_user (id, username, password_hash) VALUES ($1, $2, $3)", user.Id, user.Username, user.Password)
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (u UserService) CreateUser(user models.User) error {
 
 func (u UserService) GetHashedPasswordByUsername(username string) (string, error) {
 	var password string
-	err := u.db.Get(&password, "SELECT password FROM org_user WHERE username=$1", username)
+	err := u.db.Get(&password, "SELECT password_hash FROM org_user WHERE username=$1", username)
 	if err != nil {
 		return "", err
 	}

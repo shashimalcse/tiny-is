@@ -8,6 +8,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/shashimalcse/tiny-is/internal/application"
 	cs "github.com/shashimalcse/tiny-is/internal/cache"
+	"github.com/shashimalcse/tiny-is/internal/organization"
 	"github.com/shashimalcse/tiny-is/internal/server/routes"
 	"github.com/shashimalcse/tiny-is/internal/session"
 	"github.com/shashimalcse/tiny-is/internal/user"
@@ -18,7 +19,7 @@ func StartServer() {
 	cacheService := cs.NewCacheService()
 	sessionStore := session.NewSessionStore()
 
-	db, err := sqlx.Connect("postgres", "user=postgres dbname=tinydb sslmode=disable password=tinydb host=localhost")
+	db, err := sqlx.Connect("postgres", "user=postgres dbname=tiny-is-db sslmode=disable password=tinydb host=localhost")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -31,9 +32,10 @@ func StartServer() {
 		log.Println("Successfully Connected")
 	}
 
-	applicationService := application.NewApplicationService(cacheService, db)
+	organizationService := organization.NewOrganizationService(cacheService, organization.NewOrganizationRepository(db))
+	applicationService := application.NewApplicationService(cacheService, application.NewApplicationRepository(db))
 	userService := user.NewUserService(cacheService, db)
-	router := routes.NewRouter(cacheService, sessionStore, applicationService, userService)
+	router := routes.NewRouter(cacheService, sessionStore, organizationService, applicationService, userService)
 	loggedRouter := LoggingMiddleware(router)
 	if err := http.ListenAndServe(":9444", loggedRouter); err != nil {
 		panic(err)

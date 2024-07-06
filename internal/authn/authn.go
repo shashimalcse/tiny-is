@@ -23,8 +23,8 @@ func NewAuthn(cacheService *cache.CacheService, sessionStore *session.SessionSto
 	}
 }
 
-func (authn Authn) GetLoginPage(sessionDataKey string) templ.Component {
-	return screens.LoginPage(sessionDataKey)
+func (authn Authn) GetLoginPage(sessionDataKey, organizationName string) templ.Component {
+	return screens.LoginPage(sessionDataKey, organizationName)
 }
 
 func (authn Authn) ValidateUser(username, password string) (bool, error) {

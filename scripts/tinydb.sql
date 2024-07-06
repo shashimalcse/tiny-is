@@ -1,74 +1,84 @@
+CREATE TABLE organization (
+    id UUID PRIMARY KEY,
+    name VARCHAR(255) UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+); 
+
 CREATE TABLE application (
-    id VARCHAR(255) PRIMARY KEY,
+    id UUID PRIMARY KEY,
+    organization_id UUID REFERENCES organization(id),
     client_id VARCHAR(255) NOT NULL,
     client_secret VARCHAR(255) NOT NULL,
-    redirect_uri VARCHAR(255) NOT NULL,
-    grant_types VARCHAR(255) NOT NULL
+    name VARCHAR(255) NOT NULL,
+    redirect_uris TEXT[],
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (organization_id, client_id),
+    UNIQUE (organization_id, name)
+);
+
+CREATE TABLE grant_type (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) UNIQUE NOT NULL
+);
+
+INSERT INTO grant_type (name) VALUES 
+    ('authorization_code'),
+    ('client_credentials'),
+    ('refresh_token');  
+
+CREATE TABLE client_grant_type (
+    application_id UUID REFERENCES application(id),
+    grant_type_id INTEGER REFERENCES grant_type(id),
+    PRIMARY KEY (application_id, grant_type_id)
 );
 
 CREATE TABLE org_user (
-    id VARCHAR(255) PRIMARY KEY,
+    id UUID PRIMARY KEY,
+    organization_id UUID REFERENCES organization(id),
     username VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL
+    email VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (organization_id, username),
+    UNIQUE (organization_id, email)
 );
 
-CREATE TABLE authorization_server (
-    id VARCHAR(255) PRIMARY KEY,
+
+CREATE TABLE access_token (
+    id UUID PRIMARY KEY,
+    application_id UUID REFERENCES application(id),
+    user_id UUID REFERENCES org_user(id),
+    organization_id UUID REFERENCES organization(id),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE refresh_token (
+    id UUID PRIMARY KEY,
+    application_id UUID REFERENCES application(id),
+    user_id UUID REFERENCES org_user(id),
+    organization_id UUID REFERENCES organization(id),
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE role (
+    id UUID PRIMARY KEY,
+    organization_id UUID REFERENCES organization(id),
     name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (organization_id, name)
 );
 
-CREATE TABLE scope (
-    id VARCHAR(255) PRIMARY KEY,
-    authorization_server_id VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    description VARCHAR(255) NOT NULL,
-    FOREIGN KEY (authorization_server_id) REFERENCES authorization_server(id)
+CREATE TABLE user_role (
+    user_id UUID REFERENCES org_user(id),
+    role_id UUID REFERENCES role(id),
+    PRIMARY KEY (user_id, role_id)
 );
 
-CREATE TABLE policy (
-    id VARCHAR(255) PRIMARY KEY,
-    authorization_server_id VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    FOREIGN KEY (authorization_server_id) REFERENCES authorization_server(id)
-);
-
-CREATE TABLE policy_application (
-    id VARCHAR(255) PRIMARY KEY,
-    policy_id VARCHAR(255) NOT NULL,
-    application_id VARCHAR(255) NOT NULL,
-    FOREIGN KEY (policy_id) REFERENCES policy(id),
-    FOREIGN KEY (application_id) REFERENCES application(id)
-);
-
-CREATE TABLE rule (
-    id VARCHAR(255) PRIMARY KEY,
-    order_id INTEGER NOT NULL,
-    policy_id VARCHAR(255) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    access_token_lifetime INTEGER NOT NULL,
-    FOREIGN KEY (policy_id) REFERENCES policy(id)
-);
-
-CREATE TABLE rule_grant_type (
-    rule_id VARCHAR(255),
-    grant_type VARCHAR(255),
-    PRIMARY KEY (rule_id, grant_type),
-    FOREIGN KEY (rule_id) REFERENCES rules(id)
-);
-
-CREATE TABLE rule_user (
-    rule_id VARCHAR(255),
-    user_id VARCHAR(255),
-    PRIMARY KEY (rule_id, user_id),
-    FOREIGN KEY (rule_id) REFERENCES rules(id),
-    FOREIGN KEY (user_id) REFERENCES org_user(id)
-);
-
-CREATE TABLE rule_scope (
-    rule_id VARCHAR(255),
-    scope_id VARCHAR(255),
-    PRIMARY KEY (rule_id, scope_id),
-    FOREIGN KEY (rule_id) REFERENCES rules(id),
-    FOREIGN KEY (scope_id) REFERENCES scope(id)
-);
 
