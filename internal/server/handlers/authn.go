@@ -1,60 +1,77 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/shashimalcse/tiny-is/internal/authn"
-	"github.com/shashimalcse/tiny-is/internal/authn/models"
+	"github.com/shashimalcse/tiny-is/internal/server/models"
 )
 
 type AuthnHandler struct {
-	authn *authn.Authn
+	authnService authn.AuthnService
 }
 
-func NewAuthnHandler(authn *authn.Authn) *AuthnHandler {
+func NewAuthnHandler(authnService authn.AuthnService) *AuthnHandler {
 	return &AuthnHandler{
-		authn: authn,
+		authnService: authnService,
 	}
+}
+
+func (handler AuthnHandler) GetLoginRequest(w http.ResponseWriter, r *http.Request) (models.LoginRequest, error) {
+
+	orgId := r.Header.Get("org_id")
+	if orgId == "" {
+		return models.LoginRequest{}, fmt.Errorf("organization not found")
+	}
+	orgName := r.Header.Get("org_name")
+	if orgName == "" {
+		return models.LoginRequest{}, fmt.Errorf("organization not found")
+	}
+	loginRequest := models.LoginRequest{
+		Username:         r.Form.Get("username"),
+		Password:         r.Form.Get("password"),
+		OrganizationId:   orgId,
+		OrganizationName: orgName,
+	}
+	return loginRequest, nil
 }
 
 func (handler AuthnHandler) Login(w http.ResponseWriter, r *http.Request) {
 
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Unable to parse form", http.StatusBadRequest)
 		return
 	}
-	username := r.Form.Get("username")
-	password := r.Form.Get("password")
+
 	sessionDataKey := r.Form.Get("session_data_key")
 	if sessionDataKey == "" {
 		http.Error(w, "session_data_key is required", http.StatusBadRequest)
 		return
 	}
-	isUserExists, err := handler.authn.ValidateUser(username, password)
+	loginRequest, err := handler.GetLoginRequest(w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	ctx := r.Context()
+	authenticateResult, err := handler.authnService.AuthenticateUser(ctx, loginRequest.Username, loginRequest.Password, loginRequest.OrganizationId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if isUserExists {
-		oauth2AuthorizeContext, found := handler.authn.CacheService.GetOAuth2AuthorizeContextFromCacheBySessionDataKey(sessionDataKey)
-		if !found {
-			http.Error(w, "invalid session_data_key", http.StatusBadRequest)
-			return
-		}
-		userId, err := handler.authn.GetUserIdByUsername(username)
+	if authenticateResult.Authenticated {
+		oauth2AuthorizeContext, err := handler.authnService.GetOAuth2AuthorizeContextFromCacheBySessionDataKey(ctx, sessionDataKey)
+		oauth2AuthorizeContext.AuthenticatedUser = authenticateResult.AuthenticatedUser
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		}
-		authroizedUser := models.AuthenticatedUser{
-			Id:       userId,
-			Username: username,
 		}
 		sessionDuration := 30 * time.Minute
-		sessionID := handler.authn.SessionStore.CreateSession(authroizedUser.Id, oauth2AuthorizeContext.OAuth2AuthorizeRequest.ClientId, sessionDuration)
-
+		sessionID := handler.authnService.CreateSession(ctx, oauth2AuthorizeContext, sessionDuration)
 		cookie := &http.Cookie{
 			Name:     "session_id",
 			Value:    sessionID,
@@ -64,17 +81,12 @@ func (handler AuthnHandler) Login(w http.ResponseWriter, r *http.Request) {
 			SameSite: http.SameSiteLaxMode,
 		}
 		http.SetCookie(w, cookie)
-		oauth2AuthorizeContext.AuthenticatedUser = authroizedUser
-		handler.authn.CacheService.AddOAuth2AuthorizeContextToCacheBySessionDataKey(sessionDataKey, oauth2AuthorizeContext)
-		redirectURL, err := url.Parse("/authorize")
-		if err != nil {
-			http.Error(w, "invalid redirect_uri", http.StatusBadRequest)
-			return
+		handler.authnService.AddOAuth2AuthorizeContextToCacheBySessionDataKey(ctx, sessionDataKey, oauth2AuthorizeContext)
+		u := &url.URL{
+			Path:     fmt.Sprintf("/o/%s/authorize", loginRequest.OrganizationName),
+			RawQuery: "session_data_key=" + url.QueryEscape(sessionDataKey),
 		}
-		query := redirectURL.Query()
-		query.Set("session_data_key", sessionDataKey)
-		redirectURL.RawQuery = query.Encode()
-		http.Redirect(w, r, redirectURL.String(), http.StatusFound)
+		http.Redirect(w, r, u.String(), http.StatusFound)
 	} else {
 		w.Write([]byte("login failed"))
 	}
@@ -92,18 +104,15 @@ func (handler AuthnHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "session_data_key is required", http.StatusBadRequest)
 		return
 	}
+	ctx := r.Context()
 	cookie, err := r.Cookie("session_id")
 	if err == nil {
-		if _, found := handler.authn.SessionStore.GetSession(cookie.Value); found {
-			redirectURL, err := url.Parse("/authorize")
-			if err != nil {
-				http.Error(w, "invalid redirect_uri", http.StatusBadRequest)
-				return
+		if _, found := handler.authnService.GetSession(ctx, cookie.Value); found {
+			u := &url.URL{
+				Path:     fmt.Sprintf("/o/%s/authorize", orgName),
+				RawQuery: "session_data_key=" + url.QueryEscape(sessionDataKey),
 			}
-			query := redirectURL.Query()
-			query.Set("session_data_key", sessionDataKey)
-			redirectURL.RawQuery = query.Encode()
-			http.Redirect(w, r, redirectURL.String(), http.StatusFound)
+			http.Redirect(w, r, u.String(), http.StatusFound)
 		}
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_id",
@@ -111,7 +120,6 @@ func (handler AuthnHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
 			Expires:  time.Now().Add(-1 * time.Hour),
 			HttpOnly: true,
 			Path:     "/",
-			// Secure:   true,  // Uncomment when using HTTPS
 			SameSite: http.SameSiteLaxMode,
 		})
 	}
@@ -119,5 +127,5 @@ func (handler AuthnHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "session_data_key is required", http.StatusBadRequest)
 		return
 	}
-	handler.authn.GetLoginPage(sessionDataKey, orgName).Render(r.Context(), w)
+	handler.authnService.GetLoginPage(ctx, sessionDataKey, orgName).Render(r.Context(), w)
 }

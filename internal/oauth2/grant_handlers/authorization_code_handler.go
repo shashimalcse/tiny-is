@@ -1,12 +1,13 @@
 package grant_handlers
 
 import (
+	"context"
 	"errors"
-	"net/http"
 
 	"github.com/shashimalcse/tiny-is/internal/cache"
+	"github.com/shashimalcse/tiny-is/internal/oauth2/models"
 	"github.com/shashimalcse/tiny-is/internal/oauth2/token"
-	"github.com/shashimalcse/tiny-is/internal/server/models"
+	server_models "github.com/shashimalcse/tiny-is/internal/server/models"
 )
 
 type AuthorizationCodeGrantHandler struct {
@@ -21,23 +22,21 @@ func NewAuthorizationCodeGrantHandler(cacheService *cache.CacheService, tokenSer
 	}
 }
 
-func (gh *AuthorizationCodeGrantHandler) HandleGrant(r *http.Request) (models.TokenResponse, error) {
+func (gh *AuthorizationCodeGrantHandler) HandleGrant(ctx context.Context, oauth2TokenContext models.OAuth2TokenContext) (server_models.TokenResponse, error) {
 
-	code := r.Form.Get("code")
-	authroizeContext, found := gh.cacheService.GetOAuth2AuthorizeContextFromCacheByAuthCode(code)
+	authroizeContext, found := gh.cacheService.GetOAuth2AuthorizeContextFromCacheByAuthCode(oauth2TokenContext.OAuth2TokenRequest.Code)
 	if !found {
-		return models.TokenResponse{}, errors.New("invalid code")
+		return server_models.TokenResponse{}, errors.New("invalid code")
 	}
-	ctx := r.Context()
 	tokenString, err := gh.tokenService.GenerateAccessToken(ctx, authroizeContext, map[string]string{})
 	if err != nil {
-		return models.TokenResponse{}, err
+		return server_models.TokenResponse{}, err
 	}
 	refreshTokenString, err := gh.tokenService.GenerateRefreshToken(ctx, authroizeContext, map[string]string{})
 	if err != nil {
-		return models.TokenResponse{}, err
+		return server_models.TokenResponse{}, err
 	}
-	tokenResponse := models.TokenResponse{
+	tokenResponse := server_models.TokenResponse{
 		AccessToken:  tokenString,
 		RefreshToken: refreshTokenString,
 		TokenType:    "Bearer",

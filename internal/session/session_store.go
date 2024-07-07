@@ -8,10 +8,11 @@ import (
 )
 
 type SessionInfo struct {
-	SessionId string
-	UserID    string
-	ClientID  string
-	ExpiresAt time.Time
+	SessionId      string
+	UserID         string
+	OrganizationId string
+	ClientID       string
+	ExpiresAt      time.Time
 }
 
 type SessionStore struct {
@@ -24,27 +25,28 @@ func NewSessionStore() *SessionStore {
 	}
 }
 
-func (s *SessionStore) CreateSession(userID, clientID string, expireTime time.Duration) string {
+func (s *SessionStore) CreateSession(userID, OrganizationId, clientID string, expireTime time.Duration) string {
 	sessionID := uuid.New().String()
 	s.cache.Set(sessionID, SessionInfo{
-		UserID:    userID,
-		ClientID:  clientID,
-		ExpiresAt: time.Now().Add(expireTime),
-		SessionId: sessionID,
+		UserID:         userID,
+		OrganizationId: OrganizationId,
+		ClientID:       clientID,
+		ExpiresAt:      time.Now().Add(expireTime),
+		SessionId:      sessionID,
 	}, expireTime)
 	return sessionID
 }
 
-func (s *SessionStore) GetSession(sessionID string) (*SessionInfo, bool) {
+func (s *SessionStore) GetSession(sessionID string) (SessionInfo, bool) {
 	if data, found := s.cache.Get(sessionID); found {
 		sessionInfo := data.(SessionInfo)
 		if time.Now().Before(sessionInfo.ExpiresAt) {
-			return &sessionInfo, true
+			return sessionInfo, true
 		}
 		// Session has expired, remove it
 		s.cache.Delete(sessionID)
 	}
-	return nil, false
+	return SessionInfo{}, false
 }
 
 func (s *SessionStore) DeleteSession(sessionID string) {

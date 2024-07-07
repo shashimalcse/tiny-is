@@ -1,11 +1,12 @@
 package grant_handlers
 
 import (
-	"net/http"
+	"context"
 
-	"github.com/shashimalcse/tiny-is/internal/server/models"
+	"github.com/shashimalcse/tiny-is/internal/oauth2/models"
+	server_models "github.com/shashimalcse/tiny-is/internal/server/models"
 )
 
 type GrantHandler interface {
-	HandleGrant(r *http.Request) (models.TokenResponse, error)
+	HandleGrant(ctx context.Context, oauth2TokenContext models.OAuth2TokenContext) (server_models.TokenResponse, error)
 }

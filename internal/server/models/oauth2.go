@@ -28,7 +28,7 @@ type OAuth2AuthorizeContext struct {
 type OAuth2TokenRequest struct {
 	GrantType        string `json:"grant_type"`
 	Code             string `json:"code"`
-	RedirectUri      string `json:"redirect_uri"`
+	RefreshToken     string `json:"refresh_token"`
 	ClientId         string `json:"client_id"`
 	ClientSecret     string `json:"client_secret"`
 	OrganizationId   string

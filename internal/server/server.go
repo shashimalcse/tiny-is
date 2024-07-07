@@ -34,7 +34,7 @@ func StartServer() {
 
 	organizationService := organization.NewOrganizationService(cacheService, organization.NewOrganizationRepository(db))
 	applicationService := application.NewApplicationService(cacheService, application.NewApplicationRepository(db))
-	userService := user.NewUserService(cacheService, db)
+	userService := user.NewUserService(cacheService, user.NewUserRepository(db))
 	router := routes.NewRouter(cacheService, sessionStore, organizationService, applicationService, userService)
 	loggedRouter := LoggingMiddleware(router)
 	if err := http.ListenAndServe(":9444", loggedRouter); err != nil {

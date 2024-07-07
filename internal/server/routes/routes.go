@@ -11,11 +11,11 @@ import (
 	"github.com/shashimalcse/tiny-is/internal/user"
 )
 
-func NewRouter(cacheService *cache.CacheService, sessionStore *session.SessionStore, organizationService organization.OrganizationService, applicationService application.ApplicationService, userService *user.UserService) *utils.OrgServeMux {
+func NewRouter(cacheService *cache.CacheService, sessionStore *session.SessionStore, organizationService organization.OrganizationService, applicationService application.ApplicationService, userService user.UserService) *utils.OrgServeMux {
 	mux := utils.NewOrgServeMux(organizationService)
 
 	RegisterOAuth2Routes(mux, oauth2.NewOAuth2Service(cacheService, applicationService))
-	RegisterAuthnRoutes(mux, authn.NewAuthn(cacheService, sessionStore, userService))
+	RegisterAuthnRoutes(mux, authn.NewOAuth2Service(cacheService, sessionStore, userService))
 	RegisterApplicationRoutes(mux, applicationService)
 	RegisterUserRoutes(mux, userService)
 	return mux

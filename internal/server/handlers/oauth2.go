@@ -59,7 +59,7 @@ func (handler OAuth2Handler) GetOAuth2TokenRequest(w http.ResponseWriter, r *htt
 	oauth2TokenRequest := models.OAuth2TokenRequest{
 		GrantType:        r.Form.Get("grant_type"),
 		Code:             r.Form.Get("code"),
-		RedirectUri:      r.Form.Get("redirect_uri"),
+		RefreshToken:     r.Form.Get("refresh_token"),
 		ClientId:         r.Form.Get("client_id"),
 		ClientSecret:     r.Form.Get("client_secret"),
 		OrganizationId:   orgId,
@@ -170,7 +170,7 @@ func (handler OAuth2Handler) Token(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	tokenResponse, err := grantHandler.HandleGrant(r)
+	tokenResponse, err := grantHandler.HandleGrant(r.Context(), oauth2TokenContext)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

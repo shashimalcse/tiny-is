@@ -34,8 +34,8 @@ func NewOAuth2Service(cacheService *cache.CacheService, applicationService appli
 		applicationService: applicationService,
 		grantHandlers:      make(map[string]grant_handlers.GrantHandler),
 	}
-	service.registerGrantHandlers()
 	service.tokenService = token.NewTokenService([]byte("secret"))
+	service.registerGrantHandlers()
 	return service
 }
 

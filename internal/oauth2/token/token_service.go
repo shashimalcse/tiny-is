@@ -45,7 +45,7 @@ func (ts *tokenService) GenerateAccessToken(ctx context.Context, oauth2Authroize
 
 func (ts *tokenService) GenerateRefreshToken(ctx context.Context, oauth2AuthroizeContext models.OAuth2AuthorizeContext, UserData map[string]string) (string, error) {
 
-	claims, err := GetClaimsForAccessToken(oauth2AuthroizeContext.AuthenticatedUser.Id, "tiny-is")
+	claims, err := GetClaimsForRefreshTokenToken(oauth2AuthroizeContext.AuthenticatedUser.Id, "tiny-is", oauth2AuthroizeContext.OAuth2AuthorizeRequest.ClientId)
 	if err != nil {
 		return "", err
 	}
