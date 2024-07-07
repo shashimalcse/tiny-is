@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/patrickmn/go-cache"
-	"github.com/shashimalcse/tiny-is/internal/server/models"
+	"github.com/shashimalcse/tiny-is/internal/oauth2/models"
 )
 
 type CacheService struct {
@@ -30,11 +30,11 @@ func (cacheService CacheService) GetOAuth2AuthorizeContextFromCacheBySessionData
 	return authorizeContext.(models.OAuth2AuthorizeContext), true
 }
 
-func (cacheService CacheService) AddCodeToCache(code string, authorizeContext models.OAuth2AuthorizeContext) {
+func (cacheService CacheService) AddOAuth2AuthorizeContextToCacheByAuthCode(code string, authorizeContext models.OAuth2AuthorizeContext) {
 	cacheService.c.Set(code, authorizeContext, cache.DefaultExpiration)
 }
 
-func (cacheService CacheService) GetCodeFromCache(code string) (models.OAuth2AuthorizeContext, bool) {
+func (cacheService CacheService) GetOAuth2AuthorizeContextFromCacheByAuthCode(code string) (models.OAuth2AuthorizeContext, bool) {
 	authorizeContext, found := cacheService.c.Get(code)
 	if !found || authorizeContext == nil {
 		return models.OAuth2AuthorizeContext{}, false

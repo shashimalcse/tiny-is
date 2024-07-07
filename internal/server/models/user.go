@@ -3,13 +3,16 @@ package models
 import "github.com/shashimalcse/tiny-is/internal/user/models"
 
 type UserResponse struct {
-	Id       string `json:"id"`
-	Username string `json:"username"`
+	Id             string `json:"id"`
+	OrganizationId string `json:"organization_id"`
+	Username       string `json:"username"`
+	Email          string `json:"email"`
 }
 
 type UserCreateRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+	Email    string `json:"email"`
 }
 
 func GetUserResponse(user models.User) UserResponse {
