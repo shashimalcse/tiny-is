@@ -22,6 +22,7 @@ tiny-is : A fun project where I'm building an Identity and Access Management (IA
 ### OAuth2.0
 - Authorization Code Grant
 - Refresh Token Grant
+- Password Grant
 
 ### Token Management
 - jwt access and refresh tokens

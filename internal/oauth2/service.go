@@ -42,6 +42,7 @@ func NewOAuth2Service(cacheService *cache.CacheService, applicationService appli
 func (s *oauth2Service) registerGrantHandlers() {
 	s.grantHandlers["authorization_code"] = grant_handlers.NewAuthorizationCodeGrantHandler(s.cacheService, s.tokenService)
 	s.grantHandlers["refresh_token"] = grant_handlers.NewRefreshTokenGrantHandler(s.cacheService, s.tokenService)
+	s.grantHandlers["client_credentials"] = grant_handlers.NewClientCredetialGrantHandler(s.cacheService, s.tokenService)
 }
 
 func (s *oauth2Service) GetGrantHandler(grantType string) (grant_handlers.GrantHandler, error) {
