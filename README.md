@@ -1,17 +1,32 @@
-## A fun project where I am going to write an identity and access management product from scratch.
+<div align="center">
+
+<picture>
+  <source media="(prefers-color-scheme: light)" srcset="/docs/logo.png">
+  <img alt="tiny corp logo" src="/docs/logo.png" width="50%" height="50%">
+</picture>
+
+tiny-is : A fun project where I'm building an Identity and Access Management (IAM) product from scratch.
+
+</div>
+
+### Organization Management:
+- Currently supports only super organization
 
 ### User Management:
-- Basic user registration and authentication
+- Add users
+- Basic user authentication
 
 ### Application Management:
-- Registering an application with client_id, client_secret, grant_types, redirect_uris
+- Basic application management (client_id, client_secret, redirect_uris, grant_types)
 
 ### OAuth2.0
 - Authorization Code Grant
 - Refresh Token Grant
 
 ### Token Management
-- JWT Access Token
-- JWT Refresh Token
+- jwt access and refresh tokens
+
+## Session
+- in-memory session storage
 
 
