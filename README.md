@@ -22,7 +22,7 @@ tiny-is : A fun project where I'm building an Identity and Access Management (IA
 ### OAuth2.0
 - Authorization Code Grant (with PKCE)
 - Refresh Token Grant
-- Password Grant
+- Client Credentials Grant
 
 ### Token Management
 - jwt access and refresh tokens
