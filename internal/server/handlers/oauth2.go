@@ -180,3 +180,19 @@ func (handler OAuth2Handler) Token(w http.ResponseWriter, r *http.Request) error
 	json.NewEncoder(w).Encode(tokenResponse)
 	return nil
 }
+
+func (handler OAuth2Handler) Revoke(w http.ResponseWriter, r *http.Request) error {
+
+	if err := r.ParseForm(); err != nil {
+		return middlewares.NewAPIError(http.StatusBadRequest, "Invalid request payload")
+	}
+
+	token := r.Form.Get("token")
+	if token == "" {
+		return middlewares.NewAPIError(http.StatusBadRequest, "Token is required")
+	}
+	ctx := r.Context()
+	handler.oauth2Service.RevokeToken(ctx, token)
+	w.WriteHeader(http.StatusOK)
+	return nil
+}

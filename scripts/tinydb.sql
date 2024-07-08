@@ -47,23 +47,16 @@ CREATE TABLE org_user (
 );
 
 
-CREATE TABLE access_token (
+CREATE TABLE token (
     id UUID PRIMARY KEY,
-    application_id UUID REFERENCES application(id),
-    user_id UUID REFERENCES org_user(id),
+    client_id VARCHAR(255) NOT NULL,
+    entry_id VARCHAR(255) NOT NULL,
     organization_id UUID REFERENCES organization(id),
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+	expires_at BIGINT NOT NULL,
+    created_at BIGINT DEFAULT EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::BIGINT,
+    FOREIGN KEY (client_id, organization_id) REFERENCES application(client_id, organization_id)
 );
 
-CREATE TABLE refresh_token (
-    id UUID PRIMARY KEY,
-    application_id UUID REFERENCES application(id),
-    user_id UUID REFERENCES org_user(id),
-    organization_id UUID REFERENCES organization(id),
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
 
 CREATE TABLE role (
     id UUID PRIMARY KEY,

@@ -28,9 +28,9 @@ func (gh *RefreshTokenGrantHandler) HandleGrant(ctx context.Context, oauth2Token
 	if refresh_token == "" {
 		return server_models.TokenResponse{}, errors.New("invalid_refresh_token")
 	}
-	authroizeContext, err := gh.tokenService.ValidateToken(ctx, refresh_token)
+	authroizeContext, err := gh.tokenService.ValidateRefreshToken(ctx, refresh_token)
 	if err != nil {
-		return server_models.TokenResponse{}, err
+		return server_models.TokenResponse{}, errors.New("invalid_refresh_token")
 	}
 	tokenString, err := gh.tokenService.GenerateAccessToken(ctx, authroizeContext, map[string]string{})
 	if err != nil {

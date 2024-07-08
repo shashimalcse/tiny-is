@@ -8,6 +8,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/shashimalcse/tiny-is/internal/application"
 	cs "github.com/shashimalcse/tiny-is/internal/cache"
+	"github.com/shashimalcse/tiny-is/internal/oauth2/token"
 	"github.com/shashimalcse/tiny-is/internal/organization"
 	"github.com/shashimalcse/tiny-is/internal/server/routes"
 	"github.com/shashimalcse/tiny-is/internal/session"
@@ -35,7 +36,8 @@ func StartServer() {
 	organizationService := organization.NewOrganizationService(cacheService, organization.NewOrganizationRepository(db))
 	applicationService := application.NewApplicationService(cacheService, application.NewApplicationRepository(db))
 	userService := user.NewUserService(cacheService, user.NewUserRepository(db))
-	router := routes.NewRouter(cacheService, sessionStore, organizationService, applicationService, userService)
+	tokenService := token.NewTokenService(cacheService, token.NewTokenRepository(db), []byte("secret"))
+	router := routes.NewRouter(cacheService, sessionStore, organizationService, applicationService, userService, tokenService)
 	loggedRouter := LoggingMiddleware(router)
 	if err := http.ListenAndServe(":9444", loggedRouter); err != nil {
 		panic(err)

@@ -19,6 +19,7 @@ type OAuth2Service interface {
 	GetOAuth2AuthorizeContextFromCacheByAuthCode(ctx context.Context, code string) (models.OAuth2AuthorizeContext, error)
 	ValidateTokenRequest(ctx context.Context, tokenContext models.OAuth2TokenContext) error
 	GetGrantHandler(grantType string) (grant_handlers.GrantHandler, error)
+	RevokeToken(ctx context.Context, tokenString string)
 }
 
 type oauth2Service struct {
@@ -28,13 +29,13 @@ type oauth2Service struct {
 	grantHandlers      map[string]grant_handlers.GrantHandler
 }
 
-func NewOAuth2Service(cacheService *cache.CacheService, applicationService application.ApplicationService) OAuth2Service {
+func NewOAuth2Service(cacheService *cache.CacheService, tokenService token.TokenService, applicationService application.ApplicationService) OAuth2Service {
 	service := &oauth2Service{
 		cacheService:       cacheService,
 		applicationService: applicationService,
 		grantHandlers:      make(map[string]grant_handlers.GrantHandler),
+		tokenService:       tokenService,
 	}
-	service.tokenService = token.NewTokenService([]byte("secret"))
 	service.registerGrantHandlers()
 	return service
 }
@@ -87,6 +88,10 @@ func (s *oauth2Service) ValidateTokenRequest(ctx context.Context, tokenContext m
 		return errors.New("invalid client secret")
 	}
 	return nil
+}
+
+func (s *oauth2Service) RevokeToken(ctx context.Context, tokenString string) {
+	s.tokenService.RevokeToken(ctx, tokenString)
 }
 
 func (s *oauth2Service) AddOAuth2AuthorizeContextToCacheBySessionDataKey(ctx context.Context, sessionDataKey string, authroizeContext models.OAuth2AuthorizeContext) {
