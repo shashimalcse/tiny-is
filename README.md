@@ -26,6 +26,7 @@ tiny-is : A fun project where I'm building an Identity and Access Management (IA
 
 ### Token Management
 - jwt access and refresh tokens
+- token revocation
 
 ## Session
 - in-memory session storage
