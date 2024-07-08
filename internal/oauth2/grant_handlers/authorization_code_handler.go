@@ -26,7 +26,7 @@ func (gh *AuthorizationCodeGrantHandler) HandleGrant(ctx context.Context, oauth2
 
 	authroizeContext, found := gh.cacheService.GetOAuth2AuthorizeContextFromCacheByAuthCode(oauth2TokenContext.OAuth2TokenRequest.Code)
 	if !found {
-		return server_models.TokenResponse{}, errors.New("invalid code")
+		return server_models.TokenResponse{}, errors.New("invalid_code")
 	}
 	tokenString, err := gh.tokenService.GenerateAccessToken(ctx, authroizeContext, map[string]string{})
 	if err != nil {

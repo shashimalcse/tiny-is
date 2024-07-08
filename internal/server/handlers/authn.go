@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/shashimalcse/tiny-is/internal/authn"
+	"github.com/shashimalcse/tiny-is/internal/server/middlewares"
 	"github.com/shashimalcse/tiny-is/internal/server/models"
 )
 
@@ -24,11 +25,11 @@ func (handler AuthnHandler) GetLoginRequest(w http.ResponseWriter, r *http.Reque
 
 	orgId := r.Header.Get("org_id")
 	if orgId == "" {
-		return models.LoginRequest{}, fmt.Errorf("organization not found")
+		return models.LoginRequest{}, fmt.Errorf("Organization not found!")
 	}
 	orgName := r.Header.Get("org_name")
 	if orgName == "" {
-		return models.LoginRequest{}, fmt.Errorf("organization not found")
+		return models.LoginRequest{}, fmt.Errorf("Organization not found!")
 	}
 	loginRequest := models.LoginRequest{
 		Username:         r.Form.Get("username"),
@@ -39,36 +40,31 @@ func (handler AuthnHandler) GetLoginRequest(w http.ResponseWriter, r *http.Reque
 	return loginRequest, nil
 }
 
-func (handler AuthnHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (handler AuthnHandler) Login(w http.ResponseWriter, r *http.Request) error {
 
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Unable to parse form", http.StatusBadRequest)
-		return
+		return middlewares.NewAPIError(http.StatusBadRequest, "invalid request")
 	}
 
 	sessionDataKey := r.Form.Get("session_data_key")
 	if sessionDataKey == "" {
-		http.Error(w, "session_data_key is required", http.StatusBadRequest)
-		return
+		return middlewares.NewAPIError(http.StatusBadRequest, "session_data_key is required")
 	}
 	loginRequest, err := handler.GetLoginRequest(w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return middlewares.NewAPIError(http.StatusBadRequest, err.Error())
 	}
 	ctx := r.Context()
 	authenticateResult, err := handler.authnService.AuthenticateUser(ctx, loginRequest.Username, loginRequest.Password, loginRequest.OrganizationId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
 	}
 	if authenticateResult.Authenticated {
 		oauth2AuthorizeContext, err := handler.authnService.GetOAuth2AuthorizeContextFromCacheBySessionDataKey(ctx, sessionDataKey)
 		oauth2AuthorizeContext.AuthenticatedUser = authenticateResult.AuthenticatedUser
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+			return middlewares.NewAPIError(http.StatusBadRequest, err.Error())
 		}
 		sessionDuration := 30 * time.Minute
 		sessionID := handler.authnService.CreateSession(ctx, oauth2AuthorizeContext, sessionDuration)
@@ -88,21 +84,20 @@ func (handler AuthnHandler) Login(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Redirect(w, r, u.String(), http.StatusFound)
 	} else {
-		w.Write([]byte("login failed"))
+		return middlewares.NewAPIError(http.StatusUnauthorized, "Invalid credentials")
 	}
+	return nil
 }
 
-func (handler AuthnHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
+func (handler AuthnHandler) GetLoginForm(w http.ResponseWriter, r *http.Request) error {
 
 	orgName := r.Header.Get("org_name")
 	if orgName == "" {
-		http.Error(w, "Organization not found!", http.StatusNotFound)
-		return
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
 	}
 	sessionDataKey := r.URL.Query().Get("session_data_key")
 	if sessionDataKey == "" {
-		http.Error(w, "session_data_key is required", http.StatusBadRequest)
-		return
+		return middlewares.NewAPIError(http.StatusBadRequest, "session_data_key is required")
 	}
 	ctx := r.Context()
 	cookie, err := r.Cookie("session_id")
@@ -124,8 +119,8 @@ func (handler AuthnHandler) LoginForm(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	if sessionDataKey == "" {
-		http.Error(w, "session_data_key is required", http.StatusBadRequest)
-		return
+		return middlewares.NewAPIError(http.StatusBadRequest, "session_data_key is required")
 	}
 	handler.authnService.GetLoginPage(ctx, sessionDataKey, orgName).Render(r.Context(), w)
+	return nil
 }

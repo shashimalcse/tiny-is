@@ -6,6 +6,7 @@ import (
 
 	"github.com/shashimalcse/tiny-is/internal/application"
 	app_models "github.com/shashimalcse/tiny-is/internal/application/models"
+	"github.com/shashimalcse/tiny-is/internal/server/middlewares"
 	"github.com/shashimalcse/tiny-is/internal/server/models"
 )
 
@@ -19,54 +20,53 @@ func NewApplicationHandler(applicationService application.ApplicationService) *A
 	}
 }
 
-func (handler ApplicationHandler) GetApplications(w http.ResponseWriter, r *http.Request) {
+func (handler ApplicationHandler) GetApplications(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	orgId := r.Header.Get("org_id")
 	if orgId == "" {
-		http.Error(w, "Organization not found!", http.StatusNotFound)
-		return
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
 	}
 	applications, err := handler.applicationService.GetApplications(ctx, orgId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(models.GetApplicationResponses(applications))
+	return nil
 }
 
-func (handler ApplicationHandler) GetApplicationByID(w http.ResponseWriter, r *http.Request) {
+func (handler ApplicationHandler) GetApplicationByID(w http.ResponseWriter, r *http.Request) error {
 
 	applicationId := r.URL.Query().Get("id")
 	orgId := r.Header.Get("org_id")
 	if orgId == "" {
-		http.Error(w, "Organization not found!", http.StatusNotFound)
-		return
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
 	}
 	ctx := r.Context()
 	application, err := handler.applicationService.GetApplicationByID(ctx, applicationId, orgId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
+	}
+	if application.Id == "" {
+		return middlewares.NewAPIError(http.StatusNotFound, "Application not found!")
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(models.GetApplicationResponse(application))
+	return nil
 }
 
-func (handler ApplicationHandler) CreateApplication(w http.ResponseWriter, r *http.Request) {
+func (handler ApplicationHandler) CreateApplication(w http.ResponseWriter, r *http.Request) error {
 
 	orgId := r.Header.Get("org_id")
 	if orgId == "" {
-		http.Error(w, "Organization not found!", http.StatusNotFound)
-		return
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
 	}
 	var applicationRequest models.ApplicationCreateRequest
 	err := json.NewDecoder(r.Body).Decode(&applicationRequest)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return middlewares.NewAPIError(http.StatusBadRequest, "Invalid request payload")
 	}
 	application := app_models.Application{
 		Name:           applicationRequest.Name,
@@ -77,8 +77,8 @@ func (handler ApplicationHandler) CreateApplication(w http.ResponseWriter, r *ht
 	ctx := r.Context()
 	err = handler.applicationService.CreateApplication(ctx, application)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
 	}
 	w.WriteHeader(http.StatusCreated)
+	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/shashimalcse/tiny-is/internal/server/middlewares"
 	"github.com/shashimalcse/tiny-is/internal/server/models"
 	"github.com/shashimalcse/tiny-is/internal/user"
 	user_models "github.com/shashimalcse/tiny-is/internal/user/models"
@@ -19,59 +20,54 @@ func NewUserHandler(userService user.UserService) *UserHandler {
 	}
 }
 
-func (handler UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
+func (handler UserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	orgId := r.Header.Get("org_id")
 	if orgId == "" {
-		http.Error(w, "Organization not found!", http.StatusNotFound)
-		return
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
 	}
 	userId := r.URL.Query().Get("id")
 	user, err := handler.userService.GetUserByID(ctx, userId, orgId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
 	}
 	if user.Id == "" {
-		http.Error(w, "user not found", http.StatusNotFound)
-		return
+		return middlewares.NewAPIError(http.StatusNotFound, "User not found!")
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(models.GetUserResponse(user))
 	w.WriteHeader(http.StatusOK)
+	return nil
 }
 
-func (handler UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
+func (handler UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	orgId := r.Header.Get("org_id")
 	if orgId == "" {
-		http.Error(w, "Organization not found!", http.StatusNotFound)
-		return
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
 	}
 	users, err := handler.userService.GetUsers(ctx, orgId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(models.GetUsersResponse(users))
+	return nil
 }
 
-func (handler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (handler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) error {
 
 	ctx := r.Context()
 	orgId := r.Header.Get("org_id")
 	if orgId == "" {
-		http.Error(w, "Organization not found!", http.StatusNotFound)
-		return
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
 	}
 	var userCreateRequest models.UserCreateRequest
 	err := json.NewDecoder(r.Body).Decode(&userCreateRequest)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return middlewares.NewAPIError(http.StatusBadRequest, "Invalid request payload")
 	}
 	user := user_models.User{
 		OrganizationId: orgId,
@@ -81,8 +77,8 @@ func (handler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	err = handler.userService.CreateUser(ctx, user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
 	}
 	w.WriteHeader(http.StatusCreated)
+	return nil
 }
