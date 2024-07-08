@@ -12,4 +12,5 @@ func RegisterOAuth2Routes(mux *utils.OrgServeMux, oauth2Service oauth2.OAuth2Ser
 
 	mux.HandleFunc("GET /authorize", middlewares.ErrorMiddleware(handler.Authorize))
 	mux.HandleFunc("POST /token", middlewares.ErrorMiddleware(handler.Token))
+	mux.HandleFunc("POST /revoke", middlewares.ErrorMiddleware(handler.Revoke))
 }
