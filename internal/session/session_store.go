@@ -15,19 +15,25 @@ type SessionInfo struct {
 	ExpiresAt      time.Time
 }
 
-type SessionStore struct {
-	cache *cache.Cache
+type SessionStore interface {
+	CreateSession(userID, OrganizationId, clientID string, expireTime time.Duration) string
+	GetSession(sessionID string) (SessionInfo, bool)
+	DeleteSession(sessionID string)
 }
 
-func NewSessionStore() *SessionStore {
-	return &SessionStore{
-		cache: cache.New(cache.NoExpiration, cache.NoExpiration),
+type inMemorySessionStore struct {
+	c *cache.Cache
+}
+
+func NewInMemorySessionStore() SessionStore {
+	return &inMemorySessionStore{
+		c: cache.New(cache.NoExpiration, cache.NoExpiration),
 	}
 }
 
-func (s *SessionStore) CreateSession(userID, OrganizationId, clientID string, expireTime time.Duration) string {
+func (s inMemorySessionStore) CreateSession(userID, OrganizationId, clientID string, expireTime time.Duration) string {
 	sessionID := uuid.New().String()
-	s.cache.Set(sessionID, SessionInfo{
+	s.c.Set(sessionID, SessionInfo{
 		UserID:         userID,
 		OrganizationId: OrganizationId,
 		ClientID:       clientID,
@@ -37,18 +43,17 @@ func (s *SessionStore) CreateSession(userID, OrganizationId, clientID string, ex
 	return sessionID
 }
 
-func (s *SessionStore) GetSession(sessionID string) (SessionInfo, bool) {
-	if data, found := s.cache.Get(sessionID); found {
+func (s inMemorySessionStore) GetSession(sessionID string) (SessionInfo, bool) {
+	if data, found := s.c.Get(sessionID); found {
 		sessionInfo := data.(SessionInfo)
 		if time.Now().Before(sessionInfo.ExpiresAt) {
 			return sessionInfo, true
 		}
-		// Session has expired, remove it
-		s.cache.Delete(sessionID)
+		s.c.Delete(sessionID)
 	}
 	return SessionInfo{}, false
 }
 
-func (s *SessionStore) DeleteSession(sessionID string) {
-	s.cache.Delete(sessionID)
+func (s inMemorySessionStore) DeleteSession(sessionID string) {
+	s.c.Delete(sessionID)
 }

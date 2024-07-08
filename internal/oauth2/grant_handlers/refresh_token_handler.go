@@ -11,11 +11,11 @@ import (
 )
 
 type RefreshTokenGrantHandler struct {
-	cacheService *cache.CacheService
+	cacheService cache.CacheService
 	tokenService token.TokenService
 }
 
-func NewRefreshTokenGrantHandler(cacheService *cache.CacheService, tokenService token.TokenService) *RefreshTokenGrantHandler {
+func NewRefreshTokenGrantHandler(cacheService cache.CacheService, tokenService token.TokenService) *RefreshTokenGrantHandler {
 	return &RefreshTokenGrantHandler{
 		cacheService: cacheService,
 		tokenService: tokenService,

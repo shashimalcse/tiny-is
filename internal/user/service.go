@@ -18,11 +18,11 @@ type UserService interface {
 }
 
 type userService struct {
-	cacheService *cache.CacheService
+	cacheService cache.CacheService
 	repo         UserRepository
 }
 
-func NewUserService(cacheService *cache.CacheService, repo UserRepository) UserService {
+func NewUserService(cacheService cache.CacheService, repo UserRepository) UserService {
 	return &userService{
 		cacheService: cacheService,
 		repo:         repo,

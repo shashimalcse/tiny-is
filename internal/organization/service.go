@@ -14,11 +14,11 @@ type OrganizationService interface {
 }
 
 type organizationService struct {
-	cacheService *cache.CacheService
+	cacheService cache.CacheService
 	repo         OrganizationRepository
 }
 
-func NewOrganizationService(cacheService *cache.CacheService, repo OrganizationRepository) OrganizationService {
+func NewOrganizationService(cacheService cache.CacheService, repo OrganizationRepository) OrganizationService {
 	return &organizationService{
 		cacheService: cacheService,
 		repo:         repo,
@@ -30,7 +30,7 @@ func (s *organizationService) CreateOrganization(ctx context.Context, organizati
 	if err != nil {
 		return err
 	}
-	s.cacheService.SetOrganizationByName(organization)
+	s.cacheService.SetOrganization(organization)
 	return nil
 }
 
@@ -58,6 +58,6 @@ func (s *organizationService) GetOrganizationByName(ctx context.Context, name st
 		return models.Organization{}, err
 	}
 
-	s.cacheService.SetOrganizationByName(organization)
+	s.cacheService.SetOrganization(organization)
 	return organization, nil
 }
