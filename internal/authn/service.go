@@ -29,7 +29,7 @@ type authnService struct {
 	userService  user.UserService
 }
 
-func NewOAuth2Service(cacheService *cache.CacheService, sessionStore *session.SessionStore, userService user.UserService) AuthnService {
+func NewAuthnService(cacheService *cache.CacheService, sessionStore *session.SessionStore, userService user.UserService) AuthnService {
 	service := &authnService{
 		cacheService: cacheService,
 		SessionStore: sessionStore,

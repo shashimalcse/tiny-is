@@ -20,7 +20,7 @@ tiny-is : A fun project where I'm building an Identity and Access Management (IA
 - Basic application management (client_id, client_secret, redirect_uris, grant_types)
 
 ### OAuth2.0
-- Authorization Code Grant
+- Authorization Code Grant (with PKCE)
 - Refresh Token Grant
 - Password Grant
 

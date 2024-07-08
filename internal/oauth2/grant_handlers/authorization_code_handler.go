@@ -2,6 +2,8 @@ package grant_handlers
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 
 	"github.com/shashimalcse/tiny-is/internal/cache"
@@ -24,15 +26,32 @@ func NewAuthorizationCodeGrantHandler(cacheService *cache.CacheService, tokenSer
 
 func (gh *AuthorizationCodeGrantHandler) HandleGrant(ctx context.Context, oauth2TokenContext models.OAuth2TokenContext) (server_models.TokenResponse, error) {
 
-	authroizeContext, found := gh.cacheService.GetOAuth2AuthorizeContextFromCacheByAuthCode(oauth2TokenContext.OAuth2TokenRequest.Code)
+	authorizeContext, found := gh.cacheService.GetOAuth2AuthorizeContextFromCacheByAuthCode(oauth2TokenContext.OAuth2TokenRequest.Code)
 	if !found {
-		return server_models.TokenResponse{}, errors.New("invalid code")
+		return server_models.TokenResponse{}, errors.New("invalid_code")
 	}
-	tokenString, err := gh.tokenService.GenerateAccessToken(ctx, authroizeContext, map[string]string{})
+	// handle pkce
+	if authorizeContext.OAuth2AuthorizeRequest.CodeChallenge != "" {
+		if authorizeContext.OAuth2AuthorizeRequest.CodeChallengeMethod == "" || authorizeContext.OAuth2AuthorizeRequest.CodeChallengeMethod == "plain" {
+			if authorizeContext.OAuth2AuthorizeRequest.CodeChallenge != oauth2TokenContext.OAuth2TokenRequest.CodeVerifier {
+				return server_models.TokenResponse{}, errors.New("invalid_code_verifier")
+			}
+		} else if authorizeContext.OAuth2AuthorizeRequest.CodeChallengeMethod == "S256" {
+			h := sha256.New()
+			h.Write([]byte(oauth2TokenContext.OAuth2TokenRequest.CodeVerifier))
+			codeChallenge := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+			if authorizeContext.OAuth2AuthorizeRequest.CodeChallenge != codeChallenge {
+				return server_models.TokenResponse{}, errors.New("invalid_code_verifier")
+			}
+		} else {
+			return server_models.TokenResponse{}, errors.New("invalid_code_challenge_method")
+		}
+	}
+	tokenString, err := gh.tokenService.GenerateAccessToken(ctx, authorizeContext, map[string]string{})
 	if err != nil {
 		return server_models.TokenResponse{}, err
 	}
-	refreshTokenString, err := gh.tokenService.GenerateRefreshToken(ctx, authroizeContext, map[string]string{})
+	refreshTokenString, err := gh.tokenService.GenerateRefreshToken(ctx, authorizeContext, map[string]string{})
 	if err != nil {
 		return server_models.TokenResponse{}, err
 	}

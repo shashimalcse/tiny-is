@@ -1,9 +1,8 @@
 package routes
 
 import (
-	"net/http"
-
 	"github.com/shashimalcse/tiny-is/internal/server/handlers"
+	"github.com/shashimalcse/tiny-is/internal/server/middlewares"
 	"github.com/shashimalcse/tiny-is/internal/server/utils"
 	"github.com/shashimalcse/tiny-is/internal/user"
 )
@@ -11,13 +10,7 @@ import (
 func RegisterUserRoutes(mux *utils.OrgServeMux, userService user.UserService) {
 	handler := handlers.NewUserHandler(userService)
 
-	mux.HandleFunc("POST /users", func(w http.ResponseWriter, r *http.Request) {
-		handler.CreateUser(w, r)
-	})
-	mux.HandleFunc("GET /users", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetUsers(w, r)
-	})
-	mux.HandleFunc("GET /users/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetUserByID(w, r)
-	})
+	mux.HandleFunc("GET /users", middlewares.ErrorMiddleware(handler.GetUsers))
+	mux.HandleFunc("GET /users/{id}", middlewares.ErrorMiddleware(handler.GetUserByID))
+	mux.HandleFunc("POST /users", middlewares.ErrorMiddleware(handler.CreateUser))
 }
