@@ -18,7 +18,7 @@ import (
 func StartServer() {
 
 	cacheService := cs.NewCacheService()
-	sessionStore := session.NewSessionStore()
+	sessionStore := session.NewInMemorySessionStore()
 
 	db, err := sqlx.Connect("postgres", "user=postgres dbname=tiny-is-db sslmode=disable password=tinydb host=localhost")
 	if err != nil {

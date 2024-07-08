@@ -22,11 +22,11 @@ type ApplicationService interface {
 }
 
 type applicationService struct {
-	cacheService *cache.CacheService
+	cacheService cache.CacheService
 	repo         ApplicationRepository
 }
 
-func NewApplicationService(cacheService *cache.CacheService, repo ApplicationRepository) ApplicationService {
+func NewApplicationService(cacheService cache.CacheService, repo ApplicationRepository) ApplicationService {
 	return &applicationService{
 		cacheService: cacheService,
 		repo:         repo,

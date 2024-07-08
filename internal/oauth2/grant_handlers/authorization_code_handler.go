@@ -13,11 +13,11 @@ import (
 )
 
 type AuthorizationCodeGrantHandler struct {
-	cacheService *cache.CacheService
+	cacheService cache.CacheService
 	tokenService token.TokenService
 }
 
-func NewAuthorizationCodeGrantHandler(cacheService *cache.CacheService, tokenService token.TokenService) *AuthorizationCodeGrantHandler {
+func NewAuthorizationCodeGrantHandler(cacheService cache.CacheService, tokenService token.TokenService) *AuthorizationCodeGrantHandler {
 	return &AuthorizationCodeGrantHandler{
 		cacheService: cacheService,
 		tokenService: tokenService,

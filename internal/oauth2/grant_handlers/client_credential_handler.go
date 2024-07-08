@@ -11,11 +11,11 @@ import (
 )
 
 type ClientCredetialGrantHandler struct {
-	cacheService *cache.CacheService
+	cacheService cache.CacheService
 	tokenService token.TokenService
 }
 
-func NewClientCredetialGrantHandler(cacheService *cache.CacheService, tokenService token.TokenService) *ClientCredetialGrantHandler {
+func NewClientCredetialGrantHandler(cacheService cache.CacheService, tokenService token.TokenService) *ClientCredetialGrantHandler {
 	return &ClientCredetialGrantHandler{
 		cacheService: cacheService,
 		tokenService: tokenService,

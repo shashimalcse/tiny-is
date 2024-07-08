@@ -21,12 +21,12 @@ type TokenService interface {
 }
 
 type tokenService struct {
-	cacheService    *cache.CacheService
+	cacheService    cache.CacheService
 	tokenRepository TokenRepository
 	signingKey      []byte
 }
 
-func NewTokenService(cacheService *cache.CacheService, tokenRepository TokenRepository, signingKey []byte) TokenService {
+func NewTokenService(cacheService cache.CacheService, tokenRepository TokenRepository, signingKey []byte) TokenService {
 	return &tokenService{
 		cacheService:    cacheService,
 		tokenRepository: tokenRepository,

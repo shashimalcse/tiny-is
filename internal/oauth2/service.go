@@ -23,13 +23,13 @@ type OAuth2Service interface {
 }
 
 type oauth2Service struct {
-	cacheService       *cache.CacheService
+	cacheService       cache.CacheService
 	tokenService       token.TokenService
 	applicationService application.ApplicationService
 	grantHandlers      map[string]grant_handlers.GrantHandler
 }
 
-func NewOAuth2Service(cacheService *cache.CacheService, tokenService token.TokenService, applicationService application.ApplicationService) OAuth2Service {
+func NewOAuth2Service(cacheService cache.CacheService, tokenService token.TokenService, applicationService application.ApplicationService) OAuth2Service {
 	service := &oauth2Service{
 		cacheService:       cacheService,
 		applicationService: applicationService,

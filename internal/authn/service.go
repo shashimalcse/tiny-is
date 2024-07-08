@@ -24,12 +24,12 @@ type AuthnService interface {
 }
 
 type authnService struct {
-	cacheService *cache.CacheService
-	SessionStore *session.SessionStore
+	cacheService cache.CacheService
+	SessionStore session.SessionStore
 	userService  user.UserService
 }
 
-func NewAuthnService(cacheService *cache.CacheService, sessionStore *session.SessionStore, userService user.UserService) AuthnService {
+func NewAuthnService(cacheService cache.CacheService, sessionStore session.SessionStore, userService user.UserService) AuthnService {
 	service := &authnService{
 		cacheService: cacheService,
 		SessionStore: sessionStore,
