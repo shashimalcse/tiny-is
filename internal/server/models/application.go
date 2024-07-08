@@ -19,6 +19,12 @@ type ApplicationCreateRequest struct {
 	GrantTypes   []string `json:"grant_types,omitempty"`
 }
 
+type ApplicationUpdateRequest struct {
+	Name         string   `json:"name,omitempty"`
+	RedirectUris []string `json:"redirect_uris,omitempty"`
+	GrantTypes   []string `json:"grant_types,omitempty"`
+}
+
 func GetApplicationResponse(application models.Application) ApplicationResponse {
 	return ApplicationResponse{
 		Id:           application.Id,

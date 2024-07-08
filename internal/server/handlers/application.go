@@ -82,3 +82,45 @@ func (handler ApplicationHandler) CreateApplication(w http.ResponseWriter, r *ht
 	w.WriteHeader(http.StatusCreated)
 	return nil
 }
+
+func (handler ApplicationHandler) UpdateApplication(w http.ResponseWriter, r *http.Request) error {
+
+	applicationId := r.URL.Query().Get("id")
+	orgId := r.Header.Get("org_id")
+	if orgId == "" {
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
+	}
+	var applicationRequest models.ApplicationUpdateRequest
+	err := json.NewDecoder(r.Body).Decode(&applicationRequest)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusBadRequest, "Invalid request payload")
+	}
+	application := app_models.Application{
+		Name:         applicationRequest.Name,
+		RedirectUris: applicationRequest.RedirectUris,
+		GrantTypes:   applicationRequest.GrantTypes,
+	}
+	ctx := r.Context()
+	err = handler.applicationService.UpdateApplication(ctx, applicationId, orgId, application)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
+	}
+	w.WriteHeader(http.StatusOK)
+	return nil
+}
+
+func (handler ApplicationHandler) DeleteApplication(w http.ResponseWriter, r *http.Request) error {
+
+	applicationId := r.URL.Query().Get("id")
+	orgId := r.Header.Get("org_id")
+	if orgId == "" {
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
+	}
+	ctx := r.Context()
+	err := handler.applicationService.DeleteApplication(ctx, applicationId, orgId)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
+	}
+	w.WriteHeader(http.StatusOK)
+	return nil
+}

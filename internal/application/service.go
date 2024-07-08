@@ -14,6 +14,8 @@ type ApplicationService interface {
 	GetApplications(ctx context.Context, orgId string) ([]models.Application, error)
 	GetApplicationByID(ctx context.Context, id, orgId string) (models.Application, error)
 	CreateApplication(ctx context.Context, application models.Application) error
+	UpdateApplication(ctx context.Context, id, orgId string, application models.Application) error
+	DeleteApplication(ctx context.Context, id, orgId string) error
 	ValidateClientId(ctx context.Context, clientId, orgId string) (bool, error)
 	ValidateClientSecret(ctx context.Context, clientId, clientSecret, orgId string) (bool, error)
 	ValidateRedirectUri(ctx context.Context, clientId, redirectUri, orgId string) (bool, error)
@@ -53,6 +55,22 @@ func (s *applicationService) CreateApplication(ctx context.Context, application 
 	application.ClientId = clientId
 	application.ClientSecret = clientSecret
 	return s.repo.CreateApplication(ctx, application)
+}
+
+func (s *applicationService) UpdateApplication(ctx context.Context, id, orgId string, application models.Application) error {
+	_, err := s.GetApplicationByID(ctx, id, orgId)
+	if err != nil {
+		return err
+	}
+	return s.repo.UpdateApplication(ctx, id, application)
+}
+
+func (s *applicationService) DeleteApplication(ctx context.Context, id, orgId string) error {
+	_, err := s.GetApplicationByID(ctx, id, orgId)
+	if err != nil {
+		return err
+	}
+	return s.repo.DeleteApplication(ctx, id, orgId)
 }
 
 func (s *applicationService) ValidateClientId(ctx context.Context, clientId, orgId string) (bool, error) {
