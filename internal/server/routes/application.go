@@ -13,4 +13,6 @@ func RegisterApplicationRoutes(mux *utils.OrgServeMux, applicationService applic
 	mux.HandleFunc("GET /applications", middlewares.ErrorMiddleware(handler.GetApplications))
 	mux.HandleFunc("GET /applications/{id}", middlewares.ErrorMiddleware(handler.GetApplicationByID))
 	mux.HandleFunc("POST /applications", middlewares.ErrorMiddleware(handler.CreateApplication))
+	mux.HandleFunc("PUT /applications/{id}", middlewares.ErrorMiddleware(handler.UpdateApplication))
+	mux.HandleFunc("DELETE /applications/{id}", middlewares.ErrorMiddleware(handler.DeleteApplication))
 }

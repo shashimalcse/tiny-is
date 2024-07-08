@@ -2,6 +2,8 @@ package application
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
@@ -12,6 +14,8 @@ type ApplicationRepository interface {
 	GetApplications(ctx context.Context, orgId string) ([]models.Application, error)
 	GetApplicationByID(ctx context.Context, id, orgId string) (models.Application, error)
 	CreateApplication(ctx context.Context, application models.Application) error
+	UpdateApplication(ctx context.Context, id string, updateApplication models.Application) error
+	DeleteApplication(ctx context.Context, id, orgId string) error
 	ValidateClientId(ctx context.Context, clientId, orgId string) (bool, error)
 	ValidateClientSecret(ctx context.Context, clientId, clientSecret, orgId string) (bool, error)
 	ValidateRedirectUri(ctx context.Context, clientId, redirectUri, orgId string) (bool, error)
@@ -98,6 +102,76 @@ func (r *applicationRepository) CreateApplication(ctx context.Context, applicati
 		return err
 	}
 	return nil
+}
+
+func (r *applicationRepository) UpdateApplication(ctx context.Context, id string, updateApplication models.Application) error {
+	// Start a transaction
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Prepare the update query
+	updateQuery := "UPDATE application SET "
+	updateFields := []string{}
+	updateValues := []interface{}{}
+	paramCount := 1
+
+	if updateApplication.Name != "" {
+		updateFields = append(updateFields, fmt.Sprintf("name = $%d", paramCount))
+		updateValues = append(updateValues, updateApplication.Name)
+		paramCount++
+	}
+
+	if updateApplication.RedirectUris != nil {
+		updateFields = append(updateFields, fmt.Sprintf("redirect_uris = $%d", paramCount))
+		updateValues = append(updateValues, pq.Array(updateApplication.RedirectUris))
+		paramCount++
+	}
+
+	// If there are fields to update
+	if len(updateFields) > 0 {
+		updateQuery += strings.Join(updateFields, ", ") + fmt.Sprintf(" WHERE id = $%d", paramCount)
+		updateValues = append(updateValues, id)
+
+		_, err = tx.ExecContext(ctx, updateQuery, updateValues...)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Update grant types if provided
+	if updateApplication.GrantTypes != nil {
+		// Delete existing grant types
+		_, err = tx.ExecContext(ctx, "DELETE FROM client_grant_type WHERE application_id = $1", id)
+		if err != nil {
+			return err
+		}
+
+		// Get new grant type IDs
+		grantTypeIDs, err := r.getGrantIdsByNames(updateApplication.GrantTypes)
+		if err != nil {
+			return err
+		}
+
+		// Insert new grant types
+		insertQuery := "INSERT INTO client_grant_type (application_id, grant_type_id) VALUES ($1, $2)"
+		for _, grantTypeID := range grantTypeIDs {
+			_, err = tx.ExecContext(ctx, insertQuery, id, grantTypeID)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Commit the transaction
+	return tx.Commit()
+}
+
+func (r *applicationRepository) DeleteApplication(ctx context.Context, id, orgId string) error {
+	_, err := r.db.Exec("DELETE FROM application WHERE id=$1 AND organization_id=$2", id, orgId)
+	return err
 }
 
 func (r *applicationRepository) ValidateClientId(ctx context.Context, clientId, orgId string) (bool, error) {
