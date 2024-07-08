@@ -34,14 +34,16 @@ func (handler OAuth2Handler) GetOAuth2AuthorizeRequest(w http.ResponseWriter, r 
 		return models.OAuth2AuthorizeRequest{}, fmt.Errorf("Organization not found!")
 	}
 	oauth2AuthorizeRequest := models.OAuth2AuthorizeRequest{
-		ResponseType:     r.URL.Query().Get("response_type"),
-		ClientId:         r.URL.Query().Get("client_id"),
-		RedirectUri:      r.URL.Query().Get("redirect_uri"),
-		Scope:            r.URL.Query().Get("scope"),
-		State:            r.URL.Query().Get("state"),
-		SessionDataKey:   r.URL.Query().Get("session_data_key"),
-		OrganizationId:   orgId,
-		OrganizationName: orgName,
+		ResponseType:        r.URL.Query().Get("response_type"),
+		ClientId:            r.URL.Query().Get("client_id"),
+		RedirectUri:         r.URL.Query().Get("redirect_uri"),
+		Scope:               r.URL.Query().Get("scope"),
+		State:               r.URL.Query().Get("state"),
+		CodeChallenge:       r.URL.Query().Get("code_challenge"),
+		CodeChallengeMethod: r.URL.Query().Get("code_challenge_method"),
+		SessionDataKey:      r.URL.Query().Get("session_data_key"),
+		OrganizationId:      orgId,
+		OrganizationName:    orgName,
 	}
 
 	return oauth2AuthorizeRequest, nil
@@ -63,6 +65,7 @@ func (handler OAuth2Handler) GetOAuth2TokenRequest(w http.ResponseWriter, r *htt
 		RefreshToken:     r.Form.Get("refresh_token"),
 		ClientId:         r.Form.Get("client_id"),
 		ClientSecret:     r.Form.Get("client_secret"),
+		CodeVerifier:     r.Form.Get("code_verifier"),
 		OrganizationId:   orgId,
 		OrganizationName: orgName,
 	}

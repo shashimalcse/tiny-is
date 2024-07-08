@@ -3,14 +3,16 @@ package models
 import "github.com/shashimalcse/tiny-is/internal/authn/models"
 
 type OAuth2AuthorizeRequest struct {
-	ResponseType     string
-	ClientId         string
-	RedirectUri      string
-	Scope            string
-	State            string
-	SessionDataKey   string
-	OrganizationId   string
-	OrganizationName string
+	ResponseType        string
+	ClientId            string
+	RedirectUri         string
+	Scope               string
+	State               string
+	CodeChallenge       string
+	CodeChallengeMethod string
+	SessionDataKey      string
+	OrganizationId      string
+	OrganizationName    string
 }
 
 type TokenResponse struct {
@@ -31,6 +33,7 @@ type OAuth2TokenRequest struct {
 	RefreshToken     string `json:"refresh_token"`
 	ClientId         string `json:"client_id"`
 	ClientSecret     string `json:"client_secret"`
+	CodeVerifier     string `json:"code_verifier"`
 	OrganizationId   string
 	OrganizationName string
 }
