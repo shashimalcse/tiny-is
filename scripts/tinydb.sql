@@ -46,6 +46,19 @@ CREATE TABLE org_user (
     UNIQUE (organization_id, email)
 );
 
+CREATE TABLE attribute (
+    id UUID PRIMARY KEY,
+    organization_id UUID REFERENCES organization(id),
+    name VARCHAR(255) NOT NULL,
+    UNIQUE (organization_id, name)
+);
+
+CREATE TABLE user_attribute (
+    user_id UUID REFERENCES org_user(id),
+    attribute_id UUID REFERENCES attribute(id),
+    value TEXT,
+    PRIMARY KEY (user_id, attribute_id)
+);
 
 CREATE TABLE token (
     id UUID PRIMARY KEY,

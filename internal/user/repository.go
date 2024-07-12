@@ -13,6 +13,10 @@ type UserRepository interface {
 	GetUserByUsername(ctx context.Context, username, orgId string) (models.User, error)
 	CreateUser(ctx context.Context, User models.User) error
 	GetHashedPasswordByUsername(ctx context.Context, username, orgId string) (string, error)
+	CreateAttribute(ctx context.Context, id, name, orgId string) error
+	GetAttributes(ctx context.Context, orgId string) ([]models.Attribute, error)
+	UpdateUserAttributes(ctx context.Context, id string, attributes []models.UserAttribute) error
+	GetUserAttributes(ctx context.Context, id string) ([]models.UserAttribute, error)
 }
 
 type userRepository struct {
@@ -67,4 +71,42 @@ func (r *userRepository) GetHashedPasswordByUsername(ctx context.Context, userna
 		return "", err
 	}
 	return password, nil
+}
+
+// Attributes
+
+func (r *userRepository) CreateAttribute(ctx context.Context, id, name, orgId string) error {
+	_, err := r.db.Exec("INSERT INTO attribute (id, name, organization_id) VALUES ($1, $2, $3)", id, name, orgId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepository) GetAttributes(ctx context.Context, orgId string) ([]models.Attribute, error) {
+	var Attributes []models.Attribute
+	err := r.db.Select(&Attributes, "SELECT id, name, organization_id FROM attribute WHERE organization_id=$1", orgId)
+	if err != nil {
+		return nil, err
+	}
+	return Attributes, nil
+}
+
+func (r *userRepository) UpdateUserAttributes(ctx context.Context, id string, attributes []models.UserAttribute) error {
+	for _, attribute := range attributes {
+		_, err := r.db.Exec("INSERT INTO user_attribute (user_id, attribute_id, value) VALUES ($1, $2, $3)", id, attribute.ID, attribute.Value)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *userRepository) GetUserAttributes(ctx context.Context, id string) ([]models.UserAttribute, error) {
+	var UserAttributes []models.UserAttribute
+	err := r.db.Select(&UserAttributes, "SELECT name, value FROM user_attribute JOIN attribute WHERE user_attribute.user_id=$1", id)
+	if err != nil {
+		return nil, err
+	}
+	return UserAttributes, nil
 }

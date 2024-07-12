@@ -82,3 +82,58 @@ func (handler UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) er
 	w.WriteHeader(http.StatusCreated)
 	return nil
 }
+
+func (handler UserHandler) CreateAttribute(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	orgId := r.Header.Get("org_id")
+	if orgId == "" {
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
+	}
+	var attribute models.AttributeCreateRequest
+	err := json.NewDecoder(r.Body).Decode(&attribute)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusBadRequest, "Invalid request payload")
+	}
+	err = handler.userService.CreateAttribute(ctx, attribute.Name, orgId)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
+	}
+	w.WriteHeader(http.StatusCreated)
+	return nil
+}
+
+func (handler UserHandler) GetAttributes(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	orgId := r.Header.Get("org_id")
+	if orgId == "" {
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
+	}
+	attributes, err := handler.userService.GetAttributes(ctx, orgId)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(attributes)
+	return nil
+}
+
+func (handler UserHandler) UpdateUserAttributes(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	orgId := r.Header.Get("org_id")
+	if orgId == "" {
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
+	}
+	userId := r.URL.Query().Get("id")
+	var attributes models.UserAttributeUpdateRequest
+	err := json.NewDecoder(r.Body).Decode(&attributes)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusBadRequest, "Invalid request payload")
+	}
+	err = handler.userService.UpdateUserAttribute(ctx, userId, attributes.Attributes)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
+	}
+	w.WriteHeader(http.StatusOK)
+	return nil
+}

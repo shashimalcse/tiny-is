@@ -15,6 +15,14 @@ type UserCreateRequest struct {
 	Email    string `json:"email"`
 }
 
+type AttributeCreateRequest struct {
+	Name string `json:"name"`
+}
+
+type UserAttributeUpdateRequest struct {
+	Attributes []models.UserAttribute `json:"attributes"`
+}
+
 func GetUserResponse(user models.User) UserResponse {
 	return UserResponse{
 		Id:       user.Id,
