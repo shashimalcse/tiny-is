@@ -118,7 +118,26 @@ func (handler UserHandler) GetAttributes(w http.ResponseWriter, r *http.Request)
 	return nil
 }
 
-func (handler UserHandler) UpdateUserAttributes(w http.ResponseWriter, r *http.Request) error {
+func (handler UserHandler) PatchAttributes(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	orgId := r.Header.Get("org_id")
+	if orgId == "" {
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
+	}
+	var attribute models.AttributePatchRequest
+	err := json.NewDecoder(r.Body).Decode(&attribute)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusBadRequest, "Invalid request payload")
+	}
+	err = handler.userService.PatchAttributes(ctx, orgId, attribute.AddedAttributes, attribute.RemovedAttributes)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
+	}
+	w.WriteHeader(http.StatusOK)
+	return nil
+}
+
+func (handler UserHandler) AddUserAttributes(w http.ResponseWriter, r *http.Request) error {
 	ctx := r.Context()
 	orgId := r.Header.Get("org_id")
 	if orgId == "" {
@@ -130,7 +149,27 @@ func (handler UserHandler) UpdateUserAttributes(w http.ResponseWriter, r *http.R
 	if err != nil {
 		return middlewares.NewAPIError(http.StatusBadRequest, "Invalid request payload")
 	}
-	err = handler.userService.UpdateUserAttribute(ctx, userId, attributes.Attributes)
+	err = handler.userService.AddUserAttributes(ctx, userId, attributes.Attributes)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
+	}
+	w.WriteHeader(http.StatusOK)
+	return nil
+}
+
+func (handler UserHandler) PatchUserAttributes(w http.ResponseWriter, r *http.Request) error {
+	ctx := r.Context()
+	orgId := r.Header.Get("org_id")
+	if orgId == "" {
+		return middlewares.NewAPIError(http.StatusNotFound, "Organization not found!")
+	}
+	userId := r.URL.Query().Get("id")
+	var attributes models.UserAttributePatchRequest
+	err := json.NewDecoder(r.Body).Decode(&attributes)
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusBadRequest, "Invalid request payload")
+	}
+	err = handler.userService.PatchUserAttributes(ctx, userId, attributes.AddedAttributes, attributes.RemovedAttributes)
 	if err != nil {
 		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
 	}

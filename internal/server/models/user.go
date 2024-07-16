@@ -19,14 +19,26 @@ type AttributeCreateRequest struct {
 	Name string `json:"name"`
 }
 
+type AttributePatchRequest struct {
+	AddedAttributes   []models.Attribute `json:"added_attributes"`
+	RemovedAttributes []models.Attribute `json:"removed_attributes"`
+}
+
 type UserAttributeUpdateRequest struct {
 	Attributes []models.UserAttribute `json:"attributes"`
 }
 
+type UserAttributePatchRequest struct {
+	AddedAttributes   []models.UserAttribute `json:"added_attributes"`
+	RemovedAttributes []models.UserAttribute `json:"removed_attributes"`
+}
+
 func GetUserResponse(user models.User) UserResponse {
 	return UserResponse{
-		Id:       user.Id,
-		Username: user.Username,
+		Id:             user.Id,
+		Username:       user.Username,
+		OrganizationId: user.OrganizationId,
+		Email:          user.Email,
 	}
 }
 

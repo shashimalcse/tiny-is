@@ -17,5 +17,8 @@ func RegisterUserRoutes(mux *utils.OrgServeMux, userService user.UserService) {
 	// attribues
 	mux.HandleFunc("POST /attributes", middlewares.ErrorMiddleware(handler.CreateAttribute))
 	mux.HandleFunc("GET /attributes", middlewares.ErrorMiddleware(handler.GetAttributes))
-	mux.HandleFunc("PUT /users/{id}/attributes", middlewares.ErrorMiddleware(handler.UpdateUserAttributes))
+
+	// user attributes
+	mux.HandleFunc("POST /users/{id}/attributes", middlewares.ErrorMiddleware(handler.AddUserAttributes))
+	mux.HandleFunc("PATCH /users/{id}/attributes", middlewares.ErrorMiddleware(handler.PatchUserAttributes))
 }

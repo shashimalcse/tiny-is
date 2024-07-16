@@ -17,7 +17,9 @@ type UserService interface {
 	AuthenticateUser(ctx context.Context, username, password, orgId string) (bool, error)
 	CreateAttribute(ctx context.Context, name, orgId string) error
 	GetAttributes(ctx context.Context, orgId string) ([]models.Attribute, error)
-	UpdateUserAttribute(ctx context.Context, userId string, attributes []models.UserAttribute) error
+	PatchAttributes(ctx context.Context, orgId string, addedAttributes []models.Attribute, removedAttributes []models.Attribute) error
+	AddUserAttributes(ctx context.Context, userId string, attributes []models.UserAttribute) error
+	PatchUserAttributes(ctx context.Context, userId string, addedAttributes []models.UserAttribute, removedAttributes []models.UserAttribute) error
 }
 
 type userService struct {
@@ -94,8 +96,16 @@ func (s *userService) GetAttributes(ctx context.Context, orgId string) ([]models
 	return s.repo.GetAttributes(ctx, orgId)
 }
 
-func (s *userService) UpdateUserAttribute(ctx context.Context, userId string, attributes []models.UserAttribute) error {
-	return s.repo.UpdateUserAttributes(ctx, userId, attributes)
+func (s *userService) PatchAttributes(ctx context.Context, orgId string, addedAttributes []models.Attribute, removedAttributes []models.Attribute) error {
+	return s.repo.PatchAttributes(ctx, orgId, addedAttributes, removedAttributes)
+}
+
+func (s *userService) AddUserAttributes(ctx context.Context, userId string, attributes []models.UserAttribute) error {
+	return s.repo.AddUserAttributes(ctx, userId, attributes)
+}
+
+func (s *userService) PatchUserAttributes(ctx context.Context, userId string, addedAttributes []models.UserAttribute, removedAttributes []models.UserAttribute) error {
+	return s.repo.PatchUserAttributes(ctx, userId, addedAttributes, removedAttributes)
 }
 
 func getPasswordHash(password string) (string, error) {
