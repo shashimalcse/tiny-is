@@ -23,7 +23,6 @@ func NewRefreshTokenGrantHandler(cacheService cache.CacheService, tokenService t
 }
 
 func (gh *RefreshTokenGrantHandler) HandleGrant(ctx context.Context, oauth2TokenContext models.OAuth2TokenContext) (server_models.TokenResponse, error) {
-
 	refresh_token := oauth2TokenContext.OAuth2TokenRequest.RefreshToken
 	if refresh_token == "" {
 		return server_models.TokenResponse{}, errors.New("invalid_refresh_token")

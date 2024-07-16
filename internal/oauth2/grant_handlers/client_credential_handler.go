@@ -23,7 +23,6 @@ func NewClientCredetialGrantHandler(cacheService cache.CacheService, tokenServic
 }
 
 func (gh *ClientCredetialGrantHandler) HandleGrant(ctx context.Context, oauth2TokenContext models.OAuth2TokenContext) (server_models.TokenResponse, error) {
-
 	authroizeContext := models.OAuth2AuthorizeContext{
 		AuthenticatedUser: authn_models.AuthenticatedUser{
 			Id: oauth2TokenContext.OAuth2TokenRequest.ClientId,

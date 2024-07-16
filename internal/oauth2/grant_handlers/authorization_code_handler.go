@@ -25,7 +25,6 @@ func NewAuthorizationCodeGrantHandler(cacheService cache.CacheService, tokenServ
 }
 
 func (gh *AuthorizationCodeGrantHandler) HandleGrant(ctx context.Context, oauth2TokenContext models.OAuth2TokenContext) (server_models.TokenResponse, error) {
-
 	authorizeContext, found := gh.cacheService.GetOAuth2AuthorizeContextFromCacheByAuthCode(oauth2TokenContext.OAuth2TokenRequest.Code)
 	if !found {
 		return server_models.TokenResponse{}, errors.New("invalid_code")

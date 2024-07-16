@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/shashimalcse/tiny-is/internal/application"
 	cs "github.com/shashimalcse/tiny-is/internal/cache"
 	"github.com/shashimalcse/tiny-is/internal/oauth2/token"
@@ -20,7 +20,7 @@ func StartServer() {
 	cacheService := cs.NewCacheService()
 	sessionStore := session.NewInMemorySessionStore()
 
-	db, err := sqlx.Connect("postgres", "user=postgres dbname=tiny-is-db sslmode=disable password=tinydb host=localhost")
+	db, err := sqlx.Open("sqlite3", "/Users/thilinashashimalsenarath/tinydb.db")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -31,6 +31,11 @@ func StartServer() {
 		log.Fatal(err)
 	} else {
 		log.Println("Successfully Connected")
+	}
+
+	_, err = db.Exec("PRAGMA foreign_keys = ON;")
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	organizationService := organization.NewOrganizationService(cacheService, organization.NewOrganizationRepository(db))
