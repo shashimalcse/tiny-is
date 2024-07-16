@@ -13,6 +13,12 @@ type UserRepository interface {
 	GetUserByUsername(ctx context.Context, username, orgId string) (models.User, error)
 	CreateUser(ctx context.Context, User models.User) error
 	GetHashedPasswordByUsername(ctx context.Context, username, orgId string) (string, error)
+	CreateAttribute(ctx context.Context, id, name, orgId string) error
+	GetAttributes(ctx context.Context, orgId string) ([]models.Attribute, error)
+	PatchAttributes(ctx context.Context, orgId string, addedAttributes []models.Attribute, removedAttributes []models.Attribute) error
+	AddUserAttributes(ctx context.Context, id string, attributes []models.UserAttribute) error
+	PatchUserAttributes(ctx context.Context, id string, addedAttributes []models.UserAttribute, removedAttributes []models.UserAttribute) error
+	GetUserAttributes(ctx context.Context, id string) ([]models.UserAttribute, error)
 }
 
 type userRepository struct {
@@ -67,4 +73,106 @@ func (r *userRepository) GetHashedPasswordByUsername(ctx context.Context, userna
 		return "", err
 	}
 	return password, nil
+}
+
+// Attributes
+
+func (r *userRepository) CreateAttribute(ctx context.Context, id, name, orgId string) error {
+	_, err := r.db.Exec("INSERT INTO attribute (id, name, organization_id) VALUES ($1, $2, $3)", id, name, orgId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *userRepository) GetAttributes(ctx context.Context, orgId string) ([]models.Attribute, error) {
+	var Attributes []models.Attribute
+	err := r.db.Select(&Attributes, "SELECT id, name, organization_id FROM attribute WHERE organization_id=$1", orgId)
+	if err != nil {
+		return nil, err
+	}
+	return Attributes, nil
+}
+
+func (r *userRepository) PatchAttributes(ctx context.Context, orgId string, addedAttributes []models.Attribute, removedAttributes []models.Attribute) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	// Add new attributes
+	for _, attribute := range addedAttributes {
+		_, err := r.db.Exec("INSERT INTO attribute (id, name, organization_id) VALUES ($1, $2, $3)", attribute.ID, attribute.Name, orgId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Remove attributes
+	for _, attribute := range removedAttributes {
+		_, err := r.db.Exec("DELETE FROM attribute WHERE id=$1 AND organization_id=$2", attribute.ID, orgId)
+		if err != nil {
+			tx.Rollback()
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepository) AddUserAttributes(ctx context.Context, id string, attributes []models.UserAttribute) error {
+	for _, attribute := range attributes {
+		_, err := r.db.Exec("INSERT INTO user_attribute (user_id, attribute_id, value) VALUES ($1, $2, $3)", id, attribute.ID, attribute.Value)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *userRepository) PatchUserAttributes(ctx context.Context, id string, addedAttributes []models.UserAttribute, removedAttributes []models.UserAttribute) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	// Add new attributes
+	for _, attribute := range addedAttributes {
+		_, err := tx.Exec("INSERT INTO user_attribute (user_id, attribute_id, value) VALUES ($1, $2, $3)", id, attribute.ID, attribute.Value)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// Remove attributes
+	for _, attribute := range removedAttributes {
+		_, err := tx.Exec("DELETE FROM user_attribute WHERE user_id=$1 AND attribute_id=$2", id, attribute.ID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+func (r *userRepository) GetUserAttributes(ctx context.Context, id string) ([]models.UserAttribute, error) {
+	var UserAttributes []models.UserAttribute
+	err := r.db.Select(&UserAttributes, "SELECT name, value FROM user_attribute JOIN attribute WHERE user_attribute.user_id=$1", id)
+	if err != nil {
+		return nil, err
+	}
+	return UserAttributes, nil
 }

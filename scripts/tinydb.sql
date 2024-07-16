@@ -7,7 +7,7 @@ CREATE TABLE organization (
 
 CREATE TABLE application (
     id UUID PRIMARY KEY,
-    organization_id UUID REFERENCES organization(id),
+    organization_id UUID REFERENCES organization(id) ON DELETE CASCADE,
     client_id VARCHAR(255) NOT NULL,
     client_secret VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -29,14 +29,14 @@ INSERT INTO grant_type (name) VALUES
     ('refresh_token');  
 
 CREATE TABLE client_grant_type (
-    application_id UUID REFERENCES application(id),
-    grant_type_id INTEGER REFERENCES grant_type(id),
+    application_id UUID REFERENCES application(id) ON DELETE CASCADE,
+    grant_type_id INTEGER REFERENCES grant_type(id) ON DELETE CASCADE,
     PRIMARY KEY (application_id, grant_type_id)
 );
 
 CREATE TABLE org_user (
     id UUID PRIMARY KEY,
-    organization_id UUID REFERENCES organization(id),
+    organization_id UUID REFERENCES organization(id) ON DELETE CASCADE,
     username VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -46,12 +46,25 @@ CREATE TABLE org_user (
     UNIQUE (organization_id, email)
 );
 
+CREATE TABLE attribute (
+    id UUID PRIMARY KEY,
+    organization_id UUID REFERENCES organization(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    UNIQUE (organization_id, name)
+);
+
+CREATE TABLE user_attribute (
+    user_id UUID REFERENCES org_user(id) ON DELETE CASCADE,
+    attribute_id UUID REFERENCES attribute(id),
+    value TEXT,
+    PRIMARY KEY (user_id, attribute_id)
+);
 
 CREATE TABLE token (
     id UUID PRIMARY KEY,
     client_id VARCHAR(255) NOT NULL,
     entry_id VARCHAR(255) NOT NULL,
-    organization_id UUID REFERENCES organization(id),
+    organization_id UUID REFERENCES organization(id) ON DELETE CASCADE,
 	expires_at BIGINT NOT NULL,
     created_at BIGINT DEFAULT EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::BIGINT,
     FOREIGN KEY (client_id, organization_id) REFERENCES application(client_id, organization_id)
