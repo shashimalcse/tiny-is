@@ -1,0 +1,6 @@
+CREATE TABLE organization (
+    id TEXT PRIMARY KEY,
+    name TEXT UNIQUE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+); 

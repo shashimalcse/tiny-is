@@ -26,6 +26,7 @@ func NewOrganizationService(cacheService cache.CacheService, repo OrganizationRe
 }
 
 func (s *organizationService) CreateOrganization(ctx context.Context, organization models.Organization) error {
+	
 	err := s.repo.CreateOrganization(ctx, organization)
 	if err != nil {
 		return err
