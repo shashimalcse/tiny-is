@@ -44,7 +44,7 @@ func StartServer(cfg *config.Config) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	router := routes.NewRouter(cacheService, sessionStore, organizationService, applicationService, userService, tokenService)
+	router := routes.NewRouter(cfg, cacheService, sessionStore, organizationService, applicationService, userService, tokenService)
 	loggedRouter := LoggingMiddleware(router)
 	if err := http.ListenAndServe(":9444", loggedRouter); err != nil {
 		panic(err)

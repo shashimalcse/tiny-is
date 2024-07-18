@@ -19,19 +19,20 @@ func NewAPIError(status int, message string) APIError {
 	return APIError{Status: status, Message: message}
 }
 
-type HandlerFunc func(http.ResponseWriter, *http.Request) error
+func ErrorMiddleware() Middleware {
+	return func(next HandlerFunc) HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) error {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("Panic: %v", r)
+					sendErrorResponse(w, NewAPIError(http.StatusInternalServerError, "Internal server error"))
+				}
+			}()
 
-func ErrorMiddleware(next HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if r := recover(); r != nil {
-				log.Printf("Panic: %v", r)
-				sendErrorResponse(w, NewAPIError(http.StatusInternalServerError, "Internal server error"))
+			if err := next(w, r); err != nil {
+				sendErrorResponse(w, err)
 			}
-		}()
-
-		if err := next(w, r); err != nil {
-			sendErrorResponse(w, err)
+			return nil
 		}
 	}
 }

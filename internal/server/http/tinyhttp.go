@@ -1,4 +1,4 @@
-package utils
+package tinyhttp
 
 import (
 	"net/http"
@@ -7,19 +7,19 @@ import (
 	"github.com/shashimalcse/tiny-is/internal/organization"
 )
 
-type OrgServeMux struct {
+type TinyServeMux struct {
 	mux                 *http.ServeMux
 	organizationService organization.OrganizationService
 }
 
-func NewOrgServeMux(organizationService organization.OrganizationService) *OrgServeMux {
-	return &OrgServeMux{
+func NewTinyServeMux(organizationService organization.OrganizationService) *TinyServeMux {
+	return &TinyServeMux{
 		mux:                 http.NewServeMux(),
 		organizationService: organizationService,
 	}
 }
 
-func (c *OrgServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *TinyServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(r.URL.Path, "/o/") {
 		parts := strings.SplitN(r.URL.Path, "/", 4)
 		if len(parts) >= 4 {
@@ -28,6 +28,10 @@ func (c *OrgServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
 			org, err := c.organizationService.GetOrganizationByName(ctx, orgName)
 			if err != nil {
+				if strings.Contains(err.Error(), "not found") {
+					http.NotFound(w, r)
+					return
+				}
 				http.Error(w, "Internal server error", http.StatusInternalServerError)
 				return
 			}
@@ -37,7 +41,7 @@ func (c *OrgServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			r.Header.Set("org_name", orgName)
 			r.Header.Set("org_id", org.Id)
-			r.URL.Path = "/" + parts[3] // Update the URL path to match the handler's expected path
+			r.URL.Path = "/" + parts[3]
 			c.mux.ServeHTTP(w, r)
 			return
 		}
@@ -45,10 +49,10 @@ func (c *OrgServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	http.NotFound(w, r)
 }
 
-func (c *OrgServeMux) Handle(pattern string, handler http.Handler) {
+func (c *TinyServeMux) Handle(pattern string, handler http.Handler) {
 	c.mux.Handle(pattern, handler)
 }
 
-func (c *OrgServeMux) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
+func (c *TinyServeMux) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
 	c.mux.HandleFunc(pattern, handler)
 }
