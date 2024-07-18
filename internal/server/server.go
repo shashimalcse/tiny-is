@@ -8,6 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/shashimalcse/tiny-is/internal/application"
 	cs "github.com/shashimalcse/tiny-is/internal/cache"
+	"github.com/shashimalcse/tiny-is/internal/config"
 	"github.com/shashimalcse/tiny-is/internal/oauth2/token"
 	"github.com/shashimalcse/tiny-is/internal/organization"
 	"github.com/shashimalcse/tiny-is/internal/server/routes"
@@ -15,29 +16,25 @@ import (
 	"github.com/shashimalcse/tiny-is/internal/user"
 )
 
-func StartServer() {
+func StartServer(cfg *config.Config) {
 
 	cacheService := cs.NewCacheService()
 	sessionStore := session.NewInMemorySessionStore()
 
-	db, err := sqlx.Open("sqlite3", "/Users/thilinashashimalsenarath/tinydb.db")
+	db, err := sqlx.Open("sqlite3", cfg.Database.Path)
 	if err != nil {
 		log.Fatalln(err)
 	}
-
 	defer db.Close()
-
 	if err := db.Ping(); err != nil {
 		log.Fatal(err)
 	} else {
 		log.Println("Successfully Connected")
 	}
-
 	_, err = db.Exec("PRAGMA foreign_keys = ON;")
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	organizationService := organization.NewOrganizationService(cacheService, organization.NewOrganizationRepository(db))
 	applicationService := application.NewApplicationService(cacheService, application.NewApplicationRepository(db))
 	userService := user.NewUserService(cacheService, user.NewUserRepository(db))

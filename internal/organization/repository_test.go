@@ -39,12 +39,10 @@ func setupTestDB() {
 	if err != nil {
 		log.Fatalf("failed to open database: %v", err)
 	}
-
 	_, err = testDB.Exec("PRAGMA ignore_check_constraints=OFF;")
 	if err != nil {
 		log.Fatalf("failed to set PRAGMA: %v", err)
 	}
-
 	_, err = testDB.Exec(string(schema))
 	if err != nil {
 		log.Fatalf("failed to execute schema: %v", err)
@@ -69,7 +67,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func TestCreateOrganization(t *testing.T) {
+func TestRepoCreateOrganization(t *testing.T) {
 	repo := NewMockOrganizationRepository()
 	organization := models.Organization{Id: "org-1", Name: "org-1"}
 	err := repo.CreateOrganization(context.Background(), organization)
@@ -83,7 +81,7 @@ func TestCreateOrganization(t *testing.T) {
 
 }
 
-func TestCreateOrganizationWithNullName(t *testing.T) {
+func TestRepoCreateOrganizationWithNullName(t *testing.T) {
 	repo := NewMockOrganizationRepository()
 	organization := models.Organization{Id: "org-2"}
 	err := repo.CreateOrganization(context.Background(), organization)
@@ -92,7 +90,7 @@ func TestCreateOrganizationWithNullName(t *testing.T) {
 	}
 }
 
-func TestCreateOrganizationWithEmptyName(t *testing.T) {
+func TestRepoCreateOrganizationWithEmptyName(t *testing.T) {
 	repo := NewMockOrganizationRepository()
 	organization := models.Organization{Id: "org-2", Name: ""}
 	err := repo.CreateOrganization(context.Background(), organization)
@@ -101,7 +99,7 @@ func TestCreateOrganizationWithEmptyName(t *testing.T) {
 	}
 }
 
-func TestCreateOrganizationWithEmptyId(t *testing.T) {
+func TestRepoCreateOrganizationWithEmptyId(t *testing.T) {
 	repo := NewMockOrganizationRepository()
 	organization := models.Organization{Name: "org-2"}
 	err := repo.CreateOrganization(context.Background(), organization)
@@ -110,7 +108,7 @@ func TestCreateOrganizationWithEmptyId(t *testing.T) {
 	}
 }
 
-func TestCreateOrganizationWithDuplicateName(t *testing.T) {
+func TestRepoCreateOrganizationWithDuplicateName(t *testing.T) {
 	repo := NewMockOrganizationRepository()
 	organization := models.Organization{Id: "org-3", Name: "org-3"}
 	err := repo.CreateOrganization(context.Background(), organization)
@@ -132,7 +130,7 @@ func TestCreateOrganizationWithDuplicateName(t *testing.T) {
 	}
 }
 
-func TestGetOrganizationByName(t *testing.T) {
+func TestRepoGetOrganizationByName(t *testing.T) {
 	repo := NewMockOrganizationRepository()
 	organization := models.Organization{Id: "org-4", Name: "org-4"}
 	err := repo.CreateOrganization(context.Background(), organization)
@@ -150,5 +148,13 @@ func TestGetOrganizationByName(t *testing.T) {
 	if err != nil {
 		t.Errorf("failed to delete organization: %v", err)
 	}
+}
 
+func TestRepoGetOrganizationByNameNotFound(t *testing.T) {
+	repo := NewMockOrganizationRepository()
+	organization := models.Organization{Id: "org-5", Name: "org-5"}
+	_, err := repo.GetOrganizationByName(context.Background(), organization.Name)
+	if err == nil {
+		t.Errorf("expected error, got nil")
+	}
 }
