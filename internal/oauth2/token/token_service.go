@@ -35,16 +35,12 @@ func NewTokenService(cacheService cache.CacheService, tokenRepository TokenRepos
 }
 
 func (s *tokenService) GenerateAccessToken(ctx context.Context, oauth2AuthroizeContext models.OAuth2AuthorizeContext, UserData map[string]string) (string, error) {
-
 	claims, err := GetClaimsForAccessToken(oauth2AuthroizeContext.AuthenticatedUser.Id, "tiny-is")
 	if err != nil {
 		return "", err
 	}
-
 	// s.tokenRepository.PersistToken(ctx, claims["jti"].(string), claims["sub"].(string), oauth2AuthroizeContext.OAuth2AuthorizeRequest.ClientId, oauth2AuthroizeContext.OAuth2AuthorizeRequest.OrganizationId, claims["iat"].(int64), claims["exp"].(int64))
-
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
 	tokenString, err := accessToken.SignedString(s.signingKey)
 	if err != nil {
 		return "", err
@@ -53,16 +49,15 @@ func (s *tokenService) GenerateAccessToken(ctx context.Context, oauth2AuthroizeC
 }
 
 func (s *tokenService) GenerateRefreshToken(ctx context.Context, oauth2AuthroizeContext models.OAuth2AuthorizeContext, UserData map[string]string) (string, error) {
-
 	claims, err := GetClaimsForRefreshTokenToken(oauth2AuthroizeContext.AuthenticatedUser.Id, "tiny-is", oauth2AuthroizeContext.OAuth2AuthorizeRequest.ClientId)
 	if err != nil {
 		return "", err
 	}
-
-	s.tokenRepository.PersistToken(ctx, claims["jti"].(string), claims["sub"].(string), oauth2AuthroizeContext.OAuth2AuthorizeRequest.ClientId, oauth2AuthroizeContext.OAuth2AuthorizeRequest.OrganizationId, claims["iat"].(int64), claims["exp"].(int64))
-
+	err = s.tokenRepository.PersistToken(ctx, claims["jti"].(string), claims["sub"].(string), oauth2AuthroizeContext.OAuth2AuthorizeRequest.ClientId, oauth2AuthroizeContext.OAuth2AuthorizeRequest.OrganizationId, claims["iat"].(int64), claims["exp"].(int64))
+	if err != nil {
+		return "", err
+	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
 	tokenString, err := accessToken.SignedString(s.signingKey)
 	if err != nil {
 		return "", err
@@ -71,19 +66,15 @@ func (s *tokenService) GenerateRefreshToken(ctx context.Context, oauth2Authroize
 }
 
 func (s *tokenService) ValidateRefreshToken(ctx context.Context, tokenString string) (models.OAuth2AuthorizeContext, error) {
-
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return models.OAuth2AuthorizeContext{}, errors.New("unexpected signing method")
 		}
-
 		return s.signingKey, nil
 	})
-
 	if err != nil {
 		return models.OAuth2AuthorizeContext{}, errors.New("invalid refresh token")
 	}
-
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 
 		if exp, ok := claims["exp"].(float64); ok {
@@ -108,12 +99,10 @@ func (s *tokenService) ValidateRefreshToken(ctx context.Context, tokenString str
 		if !ok {
 			return models.OAuth2AuthorizeContext{}, errors.New("client ID not found in refresh token")
 		}
-
 		sub, ok := claims["sub"].(string)
 		if !ok {
 			return models.OAuth2AuthorizeContext{}, errors.New("sub not found in refresh token")
 		}
-
 		authroizeContext := models.OAuth2AuthorizeContext{
 			OAuth2AuthorizeRequest: server_models.OAuth2AuthorizeRequest{
 				ClientId: clientID,
@@ -128,20 +117,16 @@ func (s *tokenService) ValidateRefreshToken(ctx context.Context, tokenString str
 }
 
 func (s *tokenService) RevokeToken(ctx context.Context, tokenString string) {
-
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return models.OAuth2AuthorizeContext{}, errors.New("unexpected signing method")
 		}
 		return s.signingKey, nil
 	})
-
 	if err != nil {
 		return
 	}
-
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-
 		if jti, ok := claims["jti"].(string); ok {
 			s.tokenRepository.DeleteToken(ctx, jti)
 		}
@@ -149,7 +134,6 @@ func (s *tokenService) RevokeToken(ctx context.Context, tokenString string) {
 }
 
 func GetClaimsForAccessToken(sub, issuer string) (jwt.MapClaims, error) {
-
 	expiresAt := time.Now().Add(time.Minute * 60).Unix()
 	iat := time.Now().Unix()
 	nbf := time.Now().Unix()
@@ -169,7 +153,6 @@ func GetClaimsForAccessToken(sub, issuer string) (jwt.MapClaims, error) {
 }
 
 func GetClaimsForRefreshTokenToken(sub, issuer, client_id string) (jwt.MapClaims, error) {
-
 	expiresAt := time.Now().Add(time.Minute * 60 * 24 * 30).Unix()
 	iat := time.Now().Unix()
 	nbf := time.Now().Unix()

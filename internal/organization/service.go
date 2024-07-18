@@ -2,7 +2,9 @@ package organization
 
 import (
 	"context"
+	"errors"
 
+	"github.com/google/uuid"
 	"github.com/shashimalcse/tiny-is/internal/cache"
 	"github.com/shashimalcse/tiny-is/internal/organization/models"
 )
@@ -26,6 +28,11 @@ func NewOrganizationService(cacheService cache.CacheService, repo OrganizationRe
 }
 
 func (s *organizationService) CreateOrganization(ctx context.Context, organization models.Organization) error {
+	if organization.Name == "" {
+		return errors.New("organization name is required")
+	}
+	orgId := uuid.New().String()
+	organization.Id = orgId
 	err := s.repo.CreateOrganization(ctx, organization)
 	if err != nil {
 		return err

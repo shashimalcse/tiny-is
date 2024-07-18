@@ -9,6 +9,11 @@ tiny-is : A fun project where I'm building an Identity and Access Management (IA
 
 </div>
 
+### Stack:
+- Golang
+- SQLite
+- HTMX
+
 ### Organization Management:
 - Currently supports only super organization
 

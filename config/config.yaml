@@ -1,0 +1,6 @@
+server:
+  host:
+    name: "localhost"
+    port: 8080
+databases:
+  path: "/Users/thilinashashimalsenarath/tinydb.db"

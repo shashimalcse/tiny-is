@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -70,23 +71,25 @@ func (r *applicationRepository) GetApplicationGrant(ctx context.Context, applica
 }
 
 func (r *applicationRepository) CreateApplication(ctx context.Context, application models.Application) error {
-	_, err := r.db.NamedExec("INSERT INTO application (id, name, organization_id, client_id, client_secret, redirect_uris) VALUES (:id, :name, :organization_id, :client_id, :client_secret, :redirect_uris)", map[string]interface{}{
+	redirectURIsJSON, err := json.Marshal(application.RedirectUris)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.NamedExec("INSERT INTO application (id, name, organization_id, client_id, client_secret, redirect_uris) VALUES (:id, :name, :organization_id, :client_id, :client_secret, :redirect_uris)", map[string]interface{}{
 		"id":              application.Id,
 		"name":            application.Name,
 		"organization_id": application.OrganizationId,
 		"client_id":       application.ClientId,
 		"client_secret":   application.ClientSecret,
-		"redirect_uris":   pq.Array(application.RedirectUris),
+		"redirect_uris":   string(redirectURIsJSON),
 	})
 	if err != nil {
 		return err
 	}
-	// Query to get grant_type ids from names
 	grantTypeIDs, err := r.getGrantIdsByNames(application.GrantTypes)
 	if err != nil {
 		return err
 	}
-	// Prepare the batch insert for client_grant_type table
 	insertQuery := "INSERT INTO client_grant_type (application_id, grant_type_id) VALUES (:application_id, :grant_type_id)"
 	var clientGrantTypes []map[string]interface{}
 	for _, grantTypeID := range grantTypeIDs {
@@ -95,8 +98,6 @@ func (r *applicationRepository) CreateApplication(ctx context.Context, applicati
 			"grant_type_id":  grantTypeID,
 		})
 	}
-
-	// Execute the batch insert
 	_, err = r.db.NamedExec(insertQuery, clientGrantTypes)
 	if err != nil {
 		return err
@@ -105,14 +106,11 @@ func (r *applicationRepository) CreateApplication(ctx context.Context, applicati
 }
 
 func (r *applicationRepository) UpdateApplication(ctx context.Context, id string, updateApplication models.Application) error {
-	// Start a transaction
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
-
-	// Prepare the update query
 	updateQuery := "UPDATE application SET "
 	updateFields := []string{}
 	updateValues := []interface{}{}
@@ -129,8 +127,6 @@ func (r *applicationRepository) UpdateApplication(ctx context.Context, id string
 		updateValues = append(updateValues, pq.Array(updateApplication.RedirectUris))
 		paramCount++
 	}
-
-	// If there are fields to update
 	if len(updateFields) > 0 {
 		updateQuery += strings.Join(updateFields, ", ") + fmt.Sprintf(" WHERE id = $%d", paramCount)
 		updateValues = append(updateValues, id)
@@ -140,22 +136,15 @@ func (r *applicationRepository) UpdateApplication(ctx context.Context, id string
 			return err
 		}
 	}
-
-	// Update grant types if provided
 	if updateApplication.GrantTypes != nil {
-		// Delete existing grant types
 		_, err = tx.ExecContext(ctx, "DELETE FROM client_grant_type WHERE application_id = $1", id)
 		if err != nil {
 			return err
 		}
-
-		// Get new grant type IDs
 		grantTypeIDs, err := r.getGrantIdsByNames(updateApplication.GrantTypes)
 		if err != nil {
 			return err
 		}
-
-		// Insert new grant types
 		insertQuery := "INSERT INTO client_grant_type (application_id, grant_type_id) VALUES ($1, $2)"
 		for _, grantTypeID := range grantTypeIDs {
 			_, err = tx.ExecContext(ctx, insertQuery, id, grantTypeID)
@@ -164,8 +153,6 @@ func (r *applicationRepository) UpdateApplication(ctx context.Context, id string
 			}
 		}
 	}
-
-	// Commit the transaction
 	return tx.Commit()
 }
 
@@ -188,30 +175,27 @@ func (r *applicationRepository) ValidateClientSecret(ctx context.Context, client
 
 func (r *applicationRepository) ValidateRedirectUri(ctx context.Context, clientId, redirectUri, orgId string) (bool, error) {
 	var count int
-	err := r.db.Get(&count, "SELECT COUNT(*) FROM application WHERE client_id=$1 AND $2 = ANY(redirect_uris) AND organization_id=$3", clientId, redirectUri, orgId)
-	return count == 1, err
+	query := `SELECT COUNT(*) FROM application WHERE client_id = ? AND organization_id = ? AND json_array_length(json_extract(redirect_uris, '$')) > 0 
+        AND ? IN (SELECT value FROM json_each(redirect_uris))
+    `
+	err := r.db.GetContext(ctx, &count, query, clientId, orgId, redirectUri)
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }
 
 func (r *applicationRepository) getGrantIdsByNames(grantTypeNames []string) ([]string, error) {
-	query := "SELECT id FROM grant_type WHERE name = ANY(:grant_type_names)"
+	query := "SELECT id FROM grant_type WHERE name IN (?)"
 	var grantTypeIDs []string
-
-	// Using sqlx.Named to bind named parameters
-	q, args, err := sqlx.Named(query, map[string]interface{}{
-		"grant_type_names": pq.Array(grantTypeNames),
-	})
+	query, args, err := sqlx.In(query, grantTypeNames)
 	if err != nil {
 		return []string{}, err
 	}
-
-	// Rebinding the query for the pq driver
-	q, args, err = sqlx.In(q, args...)
-	if err != nil {
-		return []string{}, err
-	}
-
-	q = r.db.Rebind(q)
-	err = r.db.Select(&grantTypeIDs, q, args...)
+	query = r.db.Rebind(query)
+	err = r.db.Select(&grantTypeIDs, query, args...)
 	if err != nil {
 		return []string{}, err
 	}
