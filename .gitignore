@@ -1,4 +1,5 @@
 tinyis.crt
 tinyis.key
 tinyis
-test/results
+test/results/*
+databases/*

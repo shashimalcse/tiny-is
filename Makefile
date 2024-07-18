@@ -1,3 +1,6 @@
+DB_NAME=databases/tinyis.db
+SCHEMA_FILE=scripts/sqlite3.sql
+
 .PHONY: test build run
 
 test:
@@ -19,5 +22,14 @@ build: test
 run:
 	@echo "Running tinyis..."
 	@./tinyis
+
+create_db:
+	@if ! command -v sqlite3 &> /dev/null; then \
+		echo "sqlite3 could not be found. Please install sqlite3 to proceed."; \
+		exit 1; \
+	fi
+	@echo "Creating SQLite3 database..."
+	@sqlite3 $(DB_NAME) < $(SCHEMA_FILE)
+	@echo "Database created at $(DB_NAME)"	
 
 all: coverage build run

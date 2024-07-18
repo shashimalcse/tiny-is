@@ -3,7 +3,7 @@ server:
     name: "localhost"
     port: 8080
 database:
-  path: "/Users/thilinashashimalsenarath/tinydb.db"
+  path: "databases/tinyis.db"
 super_organization:
   name : "root"
   admin:

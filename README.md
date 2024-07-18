@@ -14,6 +14,17 @@ tiny-is : A fun project where I'm building an Identity and Access Management (IA
 - SQLite
 - HTMX
 
+### Run Locally:
+
+- Create sqlite database
+```bash
+make create_db
+```
+- Run the server
+```bash
+make run
+```
+
 ### Organization Management:
 - Currently supports only super organization
 
