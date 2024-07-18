@@ -153,8 +153,11 @@ func TestRepoGetOrganizationByName(t *testing.T) {
 func TestRepoGetOrganizationByNameNotFound(t *testing.T) {
 	repo := NewMockOrganizationRepository()
 	organization := models.Organization{Id: "org-5", Name: "org-5"}
-	_, err := repo.GetOrganizationByName(context.Background(), organization.Name)
-	if err == nil {
+	org, err := repo.GetOrganizationByName(context.Background(), organization.Name)
+	if err != nil {
 		t.Errorf("expected error, got nil")
+	}
+	if org.Name != "" {
+		t.Errorf("expected empty organization name, got: %s", org.Name)
 	}
 }

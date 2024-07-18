@@ -26,8 +26,11 @@ func NewOrganizationRepository(db *sqlx.DB) OrganizationRepository {
 
 func (r *organizationRepository) GetOrganizationByName(ctx context.Context, name string) (models.Organization, error) {
 	var organization models.Organization
-	err := r.db.Get(&organization, "SELECT id, name FROM organization WHERE name = ?", name)
+	err := r.db.GetContext(ctx, &organization, "SELECT id, name FROM organization WHERE name = ?", name)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return models.Organization{}, nil
+		}
 		return models.Organization{}, err
 	}
 	return organization, nil
