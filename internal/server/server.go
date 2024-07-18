@@ -40,7 +40,7 @@ func StartServer(cfg *config.Config) {
 	applicationService := application.NewApplicationService(cacheService, application.NewApplicationRepository(db))
 	userService := user.NewUserService(cacheService, user.NewUserRepository(db))
 	tokenService := token.NewTokenService(cacheService, token.NewTokenRepository(db), []byte("secret"))
-	err = utils.InitServer(cfg, organizationService, applicationService, userService)
+	err = utils.InitServer(cfg, db, organizationService, applicationService, userService)
 	if err != nil {
 		log.Fatal(err)
 	}

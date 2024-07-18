@@ -24,11 +24,6 @@ CREATE TABLE grant_type (
     name TEXT UNIQUE NOT NULL
 );
 
-INSERT INTO grant_type (name) VALUES 
-    ('authorization_code'),
-    ('client_credentials'),
-    ('refresh_token');  
-
 CREATE TABLE client_grant_type (
     application_id TEXT,
     grant_type_id INTEGER,
