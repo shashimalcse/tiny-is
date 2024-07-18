@@ -2,5 +2,11 @@ server:
   host:
     name: "localhost"
     port: 8080
-databases:
-  path: "/Users/thilinashashimalsenarath/tinydb.db"
+database:
+  path: "databases/tinyis.db"
+super_organization:
+  name : "root"
+  admin:
+    username: "admin"
+    password: "admin"
+

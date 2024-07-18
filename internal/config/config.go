@@ -12,6 +12,13 @@ type Config struct {
 	Database struct {
 		Path string `yaml:"path"`
 	} `yaml:"database"`
+	SuperOrganization struct {
+		Name  string `yaml:"name"`
+		Admin struct {
+			Username string `yaml:"username"`
+			Password string `yaml:"password"`
+		} `yaml:"admin"`
+	} `yaml:"super_organization"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {

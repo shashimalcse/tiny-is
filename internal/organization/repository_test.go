@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 
@@ -21,7 +22,12 @@ var (
 )
 
 func loadSchema() {
-	file, err := os.Open("/Users/thilinashashimalsenarath/Documents/my_projects/tiny-is/resources/test/db_scripts/organization.sql")
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to get current working directory: %v", err)
+	}
+	path := filepath.Join(cwd, "..", "..", "resources", "test", "db_scripts", "organization.sql")
+	file, err := os.Open(path)
 	if err != nil {
 		log.Fatalf("failed to open schema file: %v", err)
 	}
