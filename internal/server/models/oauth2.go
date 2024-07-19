@@ -43,7 +43,7 @@ func (or OAuth2AuthorizeRequest) IsInitialRequestFromClient() bool {
 }
 
 func (or OAuth2AuthorizeRequest) IsValidRequest() bool {
-	if or.ResponseType == "" || or.ClientId == "" || or.RedirectUri == "" {
+	if or.ResponseType == "" || or.ClientId == "" || or.RedirectUri == "" || or.CodeChallenge == "" || or.CodeChallengeMethod == "" || or.CodeChallengeMethod == "none" {
 		return false
 	}
 	return true
