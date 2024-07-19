@@ -25,9 +25,6 @@ make create_db
 make run
 ```
 
-### Organization Management:
-- Currently supports only root organization
-
 ### User Management:
 - Add users
 - Basic user authentication
@@ -41,7 +38,7 @@ make run
 - Client Credentials Grant
 
 ### Token Management
-- jwt access and refresh tokens
+- jwt access and refresh tokens (EdDSA)
 - token revocation
 
 ## Session
