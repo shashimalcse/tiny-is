@@ -6,7 +6,7 @@
 </picture>
 
 tiny-is : A fun project where I'm building an Identity and Access Management (IAM) product from scratch.
-The main focus is to implement [OAuth 2.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10) 
+The main focus is to implement [OAuth 2.1](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-v2-1-10) and (OAuth 2.0 Security Best Current Practice)[https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics]
 
 </div>
 
