@@ -8,9 +8,10 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/shashimalcse/tiny-is/internal/config"
+	"github.com/shashimalcse/tiny-is/internal/security"
 )
 
-func JWTMiddleware(cfg *config.Config) Middleware {
+func JWTMiddleware(cfg *config.Config, keyManager *security.KeyManager) Middleware {
 	return func(next HandlerFunc) HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) error {
 			publicPaths := map[string]bool{
@@ -33,10 +34,14 @@ func JWTMiddleware(cfg *config.Config) Middleware {
 			tokenString := bearerToken[1]
 			claims := jwt.MapClaims{}
 			token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
 					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 				}
-				return []byte("secret"), nil
+				keyPair, err := keyManager.GetKeyPair("tinyiseddsa")
+				if err != nil {
+					return "", err
+				}
+				return keyPair.PublicKey, nil
 			})
 
 			if err != nil {

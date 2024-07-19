@@ -10,6 +10,7 @@ import (
 	authn_models "github.com/shashimalcse/tiny-is/internal/authn/models"
 	"github.com/shashimalcse/tiny-is/internal/cache"
 	"github.com/shashimalcse/tiny-is/internal/oauth2/models"
+	"github.com/shashimalcse/tiny-is/internal/security"
 	server_models "github.com/shashimalcse/tiny-is/internal/server/models"
 )
 
@@ -23,14 +24,14 @@ type TokenService interface {
 type tokenService struct {
 	cacheService    cache.CacheService
 	tokenRepository TokenRepository
-	signingKey      []byte
+	keyManager      *security.KeyManager
 }
 
-func NewTokenService(cacheService cache.CacheService, tokenRepository TokenRepository, signingKey []byte) TokenService {
+func NewTokenService(cacheService cache.CacheService, tokenRepository TokenRepository, keyManager *security.KeyManager) TokenService {
 	return &tokenService{
 		cacheService:    cacheService,
 		tokenRepository: tokenRepository,
-		signingKey:      signingKey,
+		keyManager:      keyManager,
 	}
 }
 
@@ -40,8 +41,12 @@ func (s *tokenService) GenerateAccessToken(ctx context.Context, oauth2AuthroizeC
 		return "", err
 	}
 	// s.tokenRepository.PersistToken(ctx, claims["jti"].(string), claims["sub"].(string), oauth2AuthroizeContext.OAuth2AuthorizeRequest.ClientId, oauth2AuthroizeContext.OAuth2AuthorizeRequest.OrganizationId, claims["iat"].(int64), claims["exp"].(int64))
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := accessToken.SignedString(s.signingKey)
+	accessToken := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
+	keyPair, err := s.keyManager.GetKeyPair("tinyiseddsa")
+	if err != nil {
+		return "", err
+	}
+	tokenString, err := accessToken.SignedString(keyPair.PrivateKey)
 	if err != nil {
 		return "", err
 	}
@@ -57,8 +62,12 @@ func (s *tokenService) GenerateRefreshToken(ctx context.Context, oauth2Authroize
 	if err != nil {
 		return "", err
 	}
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := accessToken.SignedString(s.signingKey)
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
+	keyPair, err := s.keyManager.GetKeyPair("tinyiseddsa")
+	if err != nil {
+		return "", err
+	}
+	tokenString, err := refreshToken.SignedString(keyPair.PrivateKey)
 	if err != nil {
 		return "", err
 	}
@@ -67,10 +76,14 @@ func (s *tokenService) GenerateRefreshToken(ctx context.Context, oauth2Authroize
 
 func (s *tokenService) ValidateRefreshToken(ctx context.Context, tokenString string) (models.OAuth2AuthorizeContext, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
 			return models.OAuth2AuthorizeContext{}, errors.New("unexpected signing method")
 		}
-		return s.signingKey, nil
+		keyPair, err := s.keyManager.GetKeyPair("tinyiseddsa")
+		if err != nil {
+			return "", err
+		}
+		return keyPair.PublicKey, nil
 	})
 	if err != nil {
 		return models.OAuth2AuthorizeContext{}, errors.New("invalid refresh token")
@@ -118,10 +131,14 @@ func (s *tokenService) ValidateRefreshToken(ctx context.Context, tokenString str
 
 func (s *tokenService) RevokeToken(ctx context.Context, tokenString string) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
 			return models.OAuth2AuthorizeContext{}, errors.New("unexpected signing method")
 		}
-		return s.signingKey, nil
+		keyPair, err := s.keyManager.GetKeyPair("tinyiseddsa")
+		if err != nil {
+			return "", err
+		}
+		return keyPair.PublicKey, nil
 	})
 	if err != nil {
 		return

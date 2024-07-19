@@ -9,4 +9,5 @@ super_organization:
   admin:
     username: "admin"
     password: "admin"
-
+crypto:
+  path: "resources/crypto"
