@@ -19,6 +19,9 @@ type Config struct {
 			Password string `yaml:"password"`
 		} `yaml:"admin"`
 	} `yaml:"super_organization"`
+	Crypto struct {
+		Path string `yaml:"path"`
+	} `yaml:"crypto"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {

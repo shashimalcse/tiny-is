@@ -5,6 +5,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/shashimalcse/tiny-is/internal/application"
+	app_models "github.com/shashimalcse/tiny-is/internal/application/models"
 	"github.com/shashimalcse/tiny-is/internal/config"
 	"github.com/shashimalcse/tiny-is/internal/organization"
 	"github.com/shashimalcse/tiny-is/internal/organization/models"
@@ -13,15 +14,15 @@ import (
 )
 
 func addGrantTypes(db *sqlx.DB) error {
-	_, err := db.Exec("INSERT INTO grant_types (name) VALUES ('authorization_code')")
+	_, err := db.Exec("INSERT INTO grant_type (name) VALUES ('authorization_code')")
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("INSERT INTO grant_types (name) VALUES ('refresh_token')")
+	_, err = db.Exec("INSERT INTO grant_type (name) VALUES ('refresh_token')")
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("INSERT INTO grant_types (name) VALUES ('client_credentials')")
+	_, err = db.Exec("INSERT INTO grant_type (name) VALUES ('client_credentials')")
 	if err != nil {
 		return err
 	}
@@ -56,6 +57,16 @@ func InitServer(cfg *config.Config, db *sqlx.DB, organizationService organizatio
 		return err
 	}
 	err = addGrantTypes(db)
+	if err != nil {
+		return err
+	}
+	consoleApp := app_models.Application{
+		Name:           "console",
+		OrganizationId: super_org.Id,
+		GrantTypes:     []string{"authorization_code", "refresh_token", "client_credentials"},
+		RedirectUris:   []string{"https://oauthdebugger.com/debug"},
+	}
+	err = applicationService.CreateApplication(context.Background(), consoleApp)
 	if err != nil {
 		return err
 	}

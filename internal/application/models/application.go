@@ -7,5 +7,5 @@ type Application struct {
 	ClientId       string   `db:"client_id" json:"client_id,omitempty"`
 	ClientSecret   string   `db:"client_secret" json:"client_secret,omitempty"`
 	RedirectUris   []string `db:"redirect_uris" json:"redirect_uris,omitempty"`
-	GrantTypes     []string `db:"grant_types" json:"grant_types,omitempty"`
+	GrantTypes     []string `json:"grant_types,omitempty"`
 }

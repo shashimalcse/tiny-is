@@ -26,7 +26,7 @@ make run
 ```
 
 ### Organization Management:
-- Currently supports only super organization
+- Currently supports only root organization
 
 ### User Management:
 - Add users

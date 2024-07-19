@@ -11,6 +11,7 @@ import (
 	"github.com/shashimalcse/tiny-is/internal/config"
 	"github.com/shashimalcse/tiny-is/internal/oauth2/token"
 	"github.com/shashimalcse/tiny-is/internal/organization"
+	"github.com/shashimalcse/tiny-is/internal/security"
 	"github.com/shashimalcse/tiny-is/internal/server/routes"
 	"github.com/shashimalcse/tiny-is/internal/server/utils"
 	"github.com/shashimalcse/tiny-is/internal/session"
@@ -21,7 +22,11 @@ func StartServer(cfg *config.Config) {
 
 	cacheService := cs.NewCacheService()
 	sessionStore := session.NewInMemorySessionStore()
-
+	keyManager := security.NewKeyManager()
+	err := keyManager.LoadKeys(cfg.Crypto.Path)
+	if err != nil {
+		log.Fatal(err)
+	}
 	db, err := sqlx.Open("sqlite3", cfg.Database.Path)
 	if err != nil {
 		log.Fatalln(err)
@@ -39,12 +44,12 @@ func StartServer(cfg *config.Config) {
 	organizationService := organization.NewOrganizationService(cacheService, organization.NewOrganizationRepository(db))
 	applicationService := application.NewApplicationService(cacheService, application.NewApplicationRepository(db))
 	userService := user.NewUserService(cacheService, user.NewUserRepository(db))
-	tokenService := token.NewTokenService(cacheService, token.NewTokenRepository(db), []byte("secret"))
+	tokenService := token.NewTokenService(cacheService, token.NewTokenRepository(db), keyManager)
 	err = utils.InitServer(cfg, db, organizationService, applicationService, userService)
 	if err != nil {
 		log.Fatal(err)
 	}
-	router := routes.NewRouter(cacheService, sessionStore, organizationService, applicationService, userService, tokenService)
+	router := routes.NewRouter(cfg, keyManager, cacheService, sessionStore, organizationService, applicationService, userService, tokenService)
 	loggedRouter := LoggingMiddleware(router)
 	if err := http.ListenAndServe(":9444", loggedRouter); err != nil {
 		panic(err)
