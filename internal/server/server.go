@@ -1,8 +1,11 @@
 package server
 
 import (
+	"crypto/tls"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
@@ -23,7 +26,7 @@ func StartServer(cfg *config.Config) {
 	cacheService := cs.NewCacheService()
 	sessionStore := session.NewInMemorySessionStore()
 	keyManager := security.NewKeyManager()
-	err := keyManager.LoadKeys(cfg.Crypto.Path)
+	err := keyManager.LoadKeys(cfg.Crypto.JWA.Path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,7 +54,17 @@ func StartServer(cfg *config.Config) {
 	}
 	router := routes.NewRouter(cfg, keyManager, cacheService, sessionStore, organizationService, applicationService, userService, tokenService)
 	loggedRouter := LoggingMiddleware(router)
-	if err := http.ListenAndServe(":9444", loggedRouter); err != nil {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Failed to get current working directory: %v", err)
+	}
+	keyPath := filepath.Join(cwd, cfg.Crypto.Server.Key)
+	certPath := filepath.Join(cwd, cfg.Crypto.Server.Cert)
+	_, err = tls.LoadX509KeyPair(certPath, keyPath)
+	if err != nil {
+		log.Fatalf("Failed to load key pair: %v", err)
+	}
+	if err := http.ListenAndServeTLS(":9444", certPath, keyPath, loggedRouter); err != nil {
 		panic(err)
 	}
 }
