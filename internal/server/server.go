@@ -54,18 +54,24 @@ func StartServer(cfg *config.Config) {
 	}
 	router := routes.NewRouter(cfg, keyManager, cacheService, sessionStore, organizationService, applicationService, userService, tokenService)
 	loggedRouter := LoggingMiddleware(router)
-	cwd, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("Failed to get current working directory: %v", err)
-	}
-	keyPath := filepath.Join(cwd, cfg.Crypto.Server.Key)
-	certPath := filepath.Join(cwd, cfg.Crypto.Server.Cert)
-	_, err = tls.LoadX509KeyPair(certPath, keyPath)
-	if err != nil {
-		log.Fatalf("Failed to load key pair: %v", err)
-	}
-	if err := http.ListenAndServeTLS(":9444", certPath, keyPath, loggedRouter); err != nil {
-		panic(err)
+	if cfg.Transport.Https {
+		cwd, err := os.Getwd()
+		if err != nil {
+			log.Fatalf("Failed to get current working directory: %v", err)
+		}
+		keyPath := filepath.Join(cwd, cfg.Crypto.Server.Key)
+		certPath := filepath.Join(cwd, cfg.Crypto.Server.Cert)
+		_, err = tls.LoadX509KeyPair(certPath, keyPath)
+		if err != nil {
+			log.Fatalf("Failed to load key pair: %v", err)
+		}
+		if err := http.ListenAndServeTLS(":9444", certPath, keyPath, loggedRouter); err != nil {
+			panic(err)
+		}
+	} else {
+		if err := http.ListenAndServe(":9444", loggedRouter); err != nil {
+			panic(err)
+		}
 	}
 }
 

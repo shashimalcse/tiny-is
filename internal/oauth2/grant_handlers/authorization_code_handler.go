@@ -54,6 +54,7 @@ func (gh *AuthorizationCodeGrantHandler) HandleGrant(ctx context.Context, oauth2
 	if err != nil {
 		return server_models.TokenResponse{}, err
 	}
+	gh.cacheService.DeleteOAuth2AuthorizeContextFromCacheByAuthCode(oauth2TokenContext.OAuth2TokenRequest.Code)
 	tokenResponse := server_models.TokenResponse{
 		AccessToken:  tokenString,
 		RefreshToken: refreshTokenString,

@@ -13,3 +13,9 @@ type OAuth2AuthorizeContext struct {
 type OAuth2TokenContext struct {
 	OAuth2TokenRequest server_models.OAuth2TokenRequest `json:"oauth2_token_request"`
 }
+
+type Metadata struct {
+	Issuer                string `json:"issuer"`
+	AuthorizationEndpoint string `json:"authorization_endpoint"`
+	TokenEndpoint         string `json:"token_endpoint"`
+}

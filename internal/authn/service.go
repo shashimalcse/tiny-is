@@ -9,6 +9,7 @@ import (
 	"github.com/shashimalcse/tiny-is/internal/authn/models"
 	"github.com/shashimalcse/tiny-is/internal/authn/screens"
 	"github.com/shashimalcse/tiny-is/internal/cache"
+	"github.com/shashimalcse/tiny-is/internal/config"
 	oauth2_models "github.com/shashimalcse/tiny-is/internal/oauth2/models"
 	"github.com/shashimalcse/tiny-is/internal/session"
 	"github.com/shashimalcse/tiny-is/internal/user"
@@ -24,13 +25,15 @@ type AuthnService interface {
 }
 
 type authnService struct {
+	cfg          *config.Config
 	cacheService cache.CacheService
 	SessionStore session.SessionStore
 	userService  user.UserService
 }
 
-func NewAuthnService(cacheService cache.CacheService, sessionStore session.SessionStore, userService user.UserService) AuthnService {
+func NewAuthnService(cfg *config.Config, cacheService cache.CacheService, sessionStore session.SessionStore, userService user.UserService) AuthnService {
 	service := &authnService{
+		cfg:          cfg,
 		cacheService: cacheService,
 		SessionStore: sessionStore,
 		userService:  userService,

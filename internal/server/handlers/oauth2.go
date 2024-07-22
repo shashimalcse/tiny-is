@@ -196,3 +196,15 @@ func (handler OAuth2Handler) Revoke(w http.ResponseWriter, r *http.Request) erro
 	w.WriteHeader(http.StatusOK)
 	return nil
 }
+
+func (handler OAuth2Handler) Metadata(w http.ResponseWriter, r *http.Request) error {
+
+	metadata, err := handler.oauth2Service.GetMetadata(r.Context())
+	if err != nil {
+		return middlewares.NewAPIError(http.StatusInternalServerError, err.Error())
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(metadata)
+	return nil
+}

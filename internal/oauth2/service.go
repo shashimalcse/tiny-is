@@ -3,12 +3,14 @@ package oauth2
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/shashimalcse/tiny-is/internal/application"
 	"github.com/shashimalcse/tiny-is/internal/cache"
 	"github.com/shashimalcse/tiny-is/internal/oauth2/grant_handlers"
 	"github.com/shashimalcse/tiny-is/internal/oauth2/models"
 	"github.com/shashimalcse/tiny-is/internal/oauth2/token"
+	tinyhttp "github.com/shashimalcse/tiny-is/internal/server/http"
 )
 
 type OAuth2Service interface {
@@ -20,6 +22,7 @@ type OAuth2Service interface {
 	ValidateTokenRequest(ctx context.Context, tokenContext models.OAuth2TokenContext) error
 	GetGrantHandler(grantType string) (grant_handlers.GrantHandler, error)
 	RevokeToken(ctx context.Context, tokenString string)
+	GetMetadata(ctx context.Context) (models.Metadata, error)
 }
 
 type oauth2Service struct {
@@ -94,6 +97,24 @@ func (s *oauth2Service) RevokeToken(ctx context.Context, tokenString string) {
 	s.tokenService.RevokeToken(ctx, tokenString)
 }
 
+func (s *oauth2Service) GetMetadata(ctx context.Context) (models.Metadata, error) {
+
+	server_url, ok := ctx.Value(tinyhttp.SERVER_URL).(string)
+	if !ok {
+		return models.Metadata{}, errors.New("server url not found in context")
+	}
+	server_scheme, ok := ctx.Value(tinyhttp.SERVER_SCHEME).(string)
+	if !ok {
+		return models.Metadata{}, errors.New("server scheme not found in context")
+	}
+	fullURL := fmt.Sprintf("%s://%s", server_scheme, server_url)
+	matadata := models.Metadata{
+		Issuer:                fullURL + "/token",
+		AuthorizationEndpoint: fullURL + "/authorize",
+		TokenEndpoint:         fullURL + "/token",
+	}
+	return matadata, nil
+}
 func (s *oauth2Service) AddOAuth2AuthorizeContextToCacheBySessionDataKey(ctx context.Context, sessionDataKey string, authroizeContext models.OAuth2AuthorizeContext) {
 	s.cacheService.AddOAuth2AuthorizeContextToCacheBySessionDataKey(sessionDataKey, authroizeContext)
 }

@@ -18,7 +18,7 @@ func NewRouter(cfg *config.Config, keyManager *security.KeyManager, cacheService
 	mux := tinyhttp.NewTinyServeMux(organizationService)
 
 	RegisterOAuth2Routes(mux, oauth2.NewOAuth2Service(cacheService, tokenService, applicationService))
-	RegisterAuthnRoutes(mux, authn.NewAuthnService(cacheService, sessionStore, userService))
+	RegisterAuthnRoutes(mux, authn.NewAuthnService(cfg, cacheService, sessionStore, userService))
 	RegisterApplicationRoutes(mux, cfg, keyManager, applicationService)
 	RegisterUserRoutes(mux, cfg, keyManager, userService)
 	return mux

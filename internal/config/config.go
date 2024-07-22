@@ -28,6 +28,9 @@ type Config struct {
 			Cert string `yaml:"cert"`
 		}
 	} `yaml:"crypto"`
+	Transport struct {
+		Https bool `yaml:"https"`
+	} `yaml:"transport"`
 }
 
 func LoadConfig(configPath string) (*Config, error) {
