@@ -1,11 +1,18 @@
 package tinyhttp
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/shashimalcse/tiny-is/internal/organization"
 )
+
+type contextKey string
+
+const SERVER_URL contextKey = "server_url"
+const SERVER_SCHEME contextKey = "server_scheme"
 
 type TinyServeMux struct {
 	mux                 *http.ServeMux
@@ -20,6 +27,15 @@ func NewTinyServeMux(organizationService organization.OrganizationService) *Tiny
 }
 
 func (c *TinyServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	ctx := context.WithValue(r.Context(), SERVER_URL, r.Host)
+	ctx = context.WithValue(ctx, SERVER_SCHEME, scheme)
+	r = r.WithContext(ctx)
+
 	if strings.HasPrefix(r.URL.Path, "/o/") {
 		parts := strings.SplitN(r.URL.Path, "/", 4)
 		if len(parts) >= 4 {
@@ -55,4 +71,12 @@ func (c *TinyServeMux) Handle(pattern string, handler http.Handler) {
 
 func (c *TinyServeMux) HandleFunc(pattern string, handler func(http.ResponseWriter, *http.Request)) {
 	c.mux.HandleFunc(pattern, handler)
+}
+
+func (c *TinyServeMux) getFullURL(r *http.Request) string {
+	scheme := "http"
+	if r.TLS != nil {
+		scheme = "https"
+	}
+	return fmt.Sprintf("%s://%s%s", scheme, r.Host, r.URL.RequestURI())
 }

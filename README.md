@@ -31,21 +31,23 @@ make generate_server_keypair
 make run
 ```
 
+### OAuth2.1
+- Authorization Code Grant with PKCE
+  - Only support with PKCE for better security
+- Refresh Token Grant
+- Client Credentials Grant
+- Authorization Server Metadata
+
+### Token Management
+- JWT access and refresh tokens (EdDSA)
+- Token revocation
+
 ### User Management:
 - Add users
 - Basic user authentication
 
 ### Application Management:
 - Basic application management (client_id, client_secret, redirect_uris, grant_types)
-
-### OAuth2.0
-- Authorization Code Grant (with PKCE)
-- Refresh Token Grant
-- Client Credentials Grant
-
-### Token Management
-- jwt access and refresh tokens (EdDSA)
-- token revocation
 
 ## Session
 - in-memory session storage

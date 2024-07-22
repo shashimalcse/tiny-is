@@ -15,3 +15,5 @@ crypto:
   server:
     key: "resources/crypto/server/server-key.pem"
     cert: "resources/crypto/server/server-cert.pem"
+transport:
+  https: false
