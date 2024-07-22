@@ -42,7 +42,7 @@ func (s *tokenService) GenerateAccessToken(ctx context.Context, oauth2AuthroizeC
 	}
 	// s.tokenRepository.PersistToken(ctx, claims["jti"].(string), claims["sub"].(string), oauth2AuthroizeContext.OAuth2AuthorizeRequest.ClientId, oauth2AuthroizeContext.OAuth2AuthorizeRequest.OrganizationId, claims["iat"].(int64), claims["exp"].(int64))
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
-	keyPair, err := s.keyManager.GetKeyPair("tinyiseddsa")
+	keyPair, err := s.keyManager.GetKeyPair("eddsa")
 	if err != nil {
 		return "", err
 	}
@@ -63,7 +63,7 @@ func (s *tokenService) GenerateRefreshToken(ctx context.Context, oauth2Authroize
 		return "", err
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodEdDSA, claims)
-	keyPair, err := s.keyManager.GetKeyPair("tinyiseddsa")
+	keyPair, err := s.keyManager.GetKeyPair("eddsa")
 	if err != nil {
 		return "", err
 	}
@@ -79,7 +79,7 @@ func (s *tokenService) ValidateRefreshToken(ctx context.Context, tokenString str
 		if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
 			return models.OAuth2AuthorizeContext{}, errors.New("unexpected signing method")
 		}
-		keyPair, err := s.keyManager.GetKeyPair("tinyiseddsa")
+		keyPair, err := s.keyManager.GetKeyPair("eddsa")
 		if err != nil {
 			return "", err
 		}
@@ -134,7 +134,7 @@ func (s *tokenService) RevokeToken(ctx context.Context, tokenString string) {
 		if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
 			return models.OAuth2AuthorizeContext{}, errors.New("unexpected signing method")
 		}
-		keyPair, err := s.keyManager.GetKeyPair("tinyiseddsa")
+		keyPair, err := s.keyManager.GetKeyPair("eddsa")
 		if err != nil {
 			return "", err
 		}

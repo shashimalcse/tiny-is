@@ -3,4 +3,5 @@ tinyis.key
 tinyis
 test/results/*
 databases/*
-resources/crypto/*
+resources/crypto/jwt/*
+resources/crypto/server/*
