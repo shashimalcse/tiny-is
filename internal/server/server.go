@@ -26,7 +26,7 @@ func StartServer(cfg *config.Config) {
 	cacheService := cs.NewCacheService()
 	sessionStore := session.NewInMemorySessionStore()
 	keyManager := security.NewKeyManager()
-	err := keyManager.LoadKeys(cfg.Crypto.JWA.Path)
+	err := keyManager.LoadKeys(cfg.Crypto.JWT.Path)
 	if err != nil {
 		log.Fatal(err)
 	}

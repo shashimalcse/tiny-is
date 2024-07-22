@@ -20,9 +20,9 @@ type Config struct {
 		} `yaml:"admin"`
 	} `yaml:"super_organization"`
 	Crypto struct {
-		JWA struct {
+		JWT struct {
 			Path string `yaml:"path"`
-		}
+		} `yaml:"jwt"`
 		Server struct {
 			Key  string `yaml:"key"`
 			Cert string `yaml:"cert"`

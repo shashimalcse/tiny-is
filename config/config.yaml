@@ -10,8 +10,8 @@ super_organization:
     username: "admin"
     password: "admin"
 crypto:
-  jwa:
-    path: "resources/crypto/jwa"
+  jwt:
+    path: "resources/crypto/jwt"
   server:
     key: "resources/crypto/server/server-key.pem"
     cert: "resources/crypto/server/server-cert.pem"

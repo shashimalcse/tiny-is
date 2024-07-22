@@ -37,7 +37,7 @@ func JWTMiddleware(cfg *config.Config, keyManager *security.KeyManager) Middlewa
 				if _, ok := token.Method.(*jwt.SigningMethodEd25519); !ok {
 					return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 				}
-				keyPair, err := keyManager.GetKeyPair("tinyiseddsa")
+				keyPair, err := keyManager.GetKeyPair("eddsa")
 				if err != nil {
 					return "", err
 				}

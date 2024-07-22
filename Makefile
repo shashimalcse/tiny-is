@@ -1,5 +1,8 @@
 DB_NAME=databases/tinyis.db
 SCHEMA_FILE=scripts/sqlite3.sql
+JWT_ALGO ?= ed25519
+JWT_KEY_DIR = resources/crypto/jwt
+SERVER_KEY_DIR = resources/crypto/server
 
 .PHONY: test build run
 
@@ -31,5 +34,13 @@ create_db:
 	@echo "Creating SQLite3 database..."
 	@sqlite3 $(DB_NAME) < $(SCHEMA_FILE)
 	@echo "Database created at $(DB_NAME)"	
+
+generate_jwt_key:
+	mkdir -p $(JWT_KEY_DIR)
+	openssl genpkey -algorithm $(JWT_ALGO) -out $(JWT_KEY_DIR)/eddsa.pem
+
+generate_server_keypair:
+	mkdir -p $(SERVER_KEY_DIR)
+	openssl req -newkey ed25519 -keyout $(SERVER_KEY_DIR)/server-key.pem -out $(SERVER_KEY_DIR)/server-cert.pem -x509 -nodes -days 365
 
 all: coverage build run

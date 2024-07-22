@@ -20,6 +20,12 @@ tiny-is : A fun project where I'm building a light-weight framework that provide
 ```bash
 make create_db
 ```
+- Generate Keys
+```bash
+make generate_jwt_key
+make generate_server_keypair
+```
+
 - Run the server
 ```bash
 make run
